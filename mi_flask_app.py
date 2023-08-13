@@ -7,10 +7,10 @@ import time
 import socket
 
 ctrlEjes=[]
-ctrlEjes[1]=FMC4030(1,"192.168.18.105")
-ctrlEjes[2]=FMC4030(2,"192.168.18.106")
-ctrlEjes[3]=FMC4030(3,"192.168.18.107")
-ctrlEjes[4]=FMC4030(4,"192.168.18.108")
+ctrlEjes[1]=FMC4030(1,"192.168.90.20")
+ctrlEjes[2]=FMC4030(2,"192.168.90.21")
+ctrlEjes[3]=FMC4030(3,"192.168.90.22")
+ctrlEjes[4]=FMC4030(4,"192.168.90.23")
 time.sleep(1)
 
 app = Flask(__name__)
@@ -207,7 +207,7 @@ def arc2_move():
     return jsonify({"funcion":"2Arc", "estado": "OK"})
 
 @app.route('/datos_json/seq_wirefeed', methods=['POST'])
-def eq_wirefeed():
+def seq_wirefeed():
     CtrlId = int(request.json['Id'])
     StepId = int(request.json['Par1'])
     
