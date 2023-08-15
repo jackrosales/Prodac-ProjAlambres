@@ -1,36 +1,29 @@
 import requests
-import sys
+import time
 
-func = str(sys.argv[1])
-idFMC = int(sys.argv[2])
-par1 = int(sys.argv[3])
-par2 = int(sys.argv[4]) 
-par3 = int(sys.argv[5])
-par4 = int(sys.argv[6])
+class HTTPDataSender:
+    data_post = []
+    data_get =[]
+    post_api_url = 'http://localhost:5000/datos_json/'
+    get_api_url = 'http://localhost:5000/datos_json/status'
+    
+    def __init__(self, post_api_url, get_api_url):
+        self.post_api_url = post_api_url
+        self.get_api_url = get_api_url
 
-# URL del servidor donde está alojado el API para controlar el movimiento
-server_url = 'http://localhost:5000/' + func
+    def send_data(self, data):
+        try:
+            response = requests.post(self.api_url, json=data)
+            if response.status_code == 200:
+                print('HTTP POST request successful.')
+            else:
+                print('HTTP POST request failed. Status code:', response.status_code)
+        except requests.exceptions.RequestException as e:
+            print('HTTP POST request error:', e)
+    
+    def receive_data(self):
+        
+        response = requests.get(self.get_api_url)
+        return response
 
-# Datos que se enviarán en la solicitud POST (en este caso, un JSON con el comando de movimiento)
-data = {
-        'Id': idFMC,
-        'Par1': par1,
-        'par2': par2,
-        'par3': par3,
-        'par4': par4,
-    }
-
-try:
-    # Realizar la solicitud POST al servidor
-    response = requests.post(server_url, json=data)
-
-
-    # Verificar el código de estado de la respuesta
-    if response.status_code == 200:
-        print('Comando de movimiento enviado con éxito.')
-    else:
-        print('Error al enviar el comando de movimiento. Código de estado:', response.status_code)
-
-except requests.exceptions.RequestException as e:
-        print('Error de conexión:', e)
 

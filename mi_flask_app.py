@@ -7,7 +7,7 @@ import time
 import socket
 
 ctrlEjes=[]
-ctrlEjes[1]=FMC4030(1,"192.168.90.20")
+ctrlEjes[1]=FMC4030(1,"192.168.90.20",8088)
 ctrlEjes[2]=FMC4030(2,"192.168.90.21")
 ctrlEjes[3]=FMC4030(3,"192.168.90.22")
 ctrlEjes[4]=FMC4030(4,"192.168.90.23")
@@ -160,13 +160,13 @@ def axe2_move():
     CtrlId = int(request.json['Id'])
     AxeId = int(request.json['AxeId'])
     EndX = int(request.json['Par1'])
-    # EndY = int(request.json['EndY'])
-    # AxeSpeed = int(request.json['Speed'])
-    # AxeAcc = int(request.json['Acc'])
-    # AxeDec = int(request.json['Dec'])
+    EndY = int(request.json['EndY'])
+    AxeSpeed = int(request.json['Speed'])
+    AxeAcc = int(request.json['Acc'])
+    AxeDec = int(request.json['Dec'])
     
     #Call 2 Axis move method 
-    ctrlEjes[CtrlId].move_2Axis(AxeId, EndX) #, EndY, AxeSpeed, AxeAcc, AxeDec)
+    ctrlEjes[CtrlId].move_2Axis(AxeId, EndX, EndY, AxeSpeed, AxeAcc, AxeDec)
     
     return jsonify({"funcion":"2Axe", "estado": "OK"})
 
