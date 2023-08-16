@@ -231,13 +231,13 @@ class PLCDataParser(HTTPDataSender):
             self.conn_stat_busy = True  
         
         # Home Move
-        if comm_rel and not self.conn_stat_busy :
+        if comm_home and not self.conn_stat_busy :
             self.data_post = {"Id": self.id, "AxeId": AxeId, "Speed": self.data_struc[Axis]["SP_HVEL"], "Acc": self.data_struc[Axis]["HACC"], "Fall": self.data_struc[Axis]["FALL"], "Dir": self.data_struc[Axis]["DIR"]}
             self.send_data("home_move")
             self.conn_stat_busy = True  
             
         # Stop Move
-        if comm_rel and not self.conn_stat_busy :
+        if comm_stop and not self.conn_stat_busy :
             self.data_post = {"Id": self.id, "AxeId": AxeId, "Mode": 2}
             self.send_data("stop_move")
             self.conn_stat_busy = True 
