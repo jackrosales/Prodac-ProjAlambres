@@ -6,12 +6,15 @@ from Proceso import *
 import time
 import socket
 
-ctrlEjes=[]
-ctrlEjes[1]=FMC4030(1,"192.168.90.20",8088)
-ctrlEjes[2]=FMC4030(2,"192.168.90.21")
-ctrlEjes[3]=FMC4030(3,"192.168.90.22")
-ctrlEjes[4]=FMC4030(4,"192.168.90.23")
+ctrlEjes=[] 
+ctrlEjes.append(FMC4030(1,'192.168.90.20',8088)) 
+# ctrlEjes.append(FMC4030(2,'192.168.90.21',8088)) 
+# ctrlEjes.append(FMC4030(3,'192.168.90.22',8088)) 
+# ctrlEjes.append(FMC4030(4,'192.168.90.23',8088)) 
+
+          
 time.sleep(1)
+
 
 app = Flask(__name__)
 
@@ -20,40 +23,40 @@ def hello():
     return "<center><h1 style='color:blue'>YA HAY SERVIDOR WEB!!!</h1></center>"
 
 @app.route('/datos_json/status1', methods=['GET'])
-def fmc4030_status():
+def fmc4030_status1():
     
-    return jsonify({"Inputs": str(ctrlEjes[1].ms.inputStatus[0]), "Outputs": str(ctrlEjes[1].ms.outputStatus[0]), "LimitN": str(ctrlEjes[1].ms.limitNStatus[0]), 
-                    "LimitP": str(ctrlEjes[1].ms.limitPStatus[0]), "StatMach": str(ctrlEjes[1].ms.machineRunStatus[0]), "StatHome": str(ctrlEjes[1].ms.homeStatus[0]),
-                    "PosX": str(ctrlEjes[1].ms.realPos[0]), "PosY": str(ctrlEjes[1].ms.realPos[1]), "PosZ": str(ctrlEjes[1].ms.realPos[2]), 
-                    "StatX": str(ctrlEjes[1].ms.axisStatus[0]), "StatY": str(ctrlEjes[1].ms.axisStatus[1]), "StatZ": str(ctrlEjes[1].ms.axisStatus[2])})
+    return jsonify({"Inputs": str(ctrlEjes[0].ms.inputStatus[0]), "Outputs": str(ctrlEjes[1].ms.outputStatus[0]), "LimitN": str(ctrlEjes[1].ms.limitNStatus[0]), 
+                    "LimitP": str(ctrlEjes[0].ms.limitPStatus[0]), "StatMach": str(ctrlEjes[1].ms.machineRunStatus[0]), "StatHome": str(ctrlEjes[1].ms.homeStatus[0]),
+                    "PosX": str(ctrlEjes[0].ms.realPos[0]), "PosY": str(ctrlEjes[1].ms.realPos[1]), "PosZ": str(ctrlEjes[1].ms.realPos[2]), 
+                    "StatX": str(ctrlEjes[0].ms.axisStatus[0]), "StatY": str(ctrlEjes[1].ms.axisStatus[1]), "StatZ": str(ctrlEjes[1].ms.axisStatus[2])})
 
 @app.route('/datos_json/status2', methods=['GET'])
-def fmc4030_status():
+def fmc4030_status2():
     
-    return jsonify({"Inputs": str(ctrlEjes[2].ms.inputStatus[0]), "Outputs": str(ctrlEjes[2].ms.outputStatus[0]), "LimitN": str(ctrlEjes[2].ms.limitNStatus[0]), 
+    return jsonify({"Inputs": str(ctrlEjes[1].ms.inputStatus[0]), "Outputs": str(ctrlEjes[2].ms.outputStatus[0]), "LimitN": str(ctrlEjes[2].ms.limitNStatus[0]), 
                     "LimitP": str(ctrlEjes[2].ms.limitPStatus[0]), "StatMach": str(ctrlEjes[2].ms.machineRunStatus[0]), "StatHome": str(ctrlEjes[2].ms.homeStatus[0]),
-                    "PosX": str(ctrlEjes[2].ms.realPos[0]), "PosY": str(ctrlEjes[2].ms.realPos[1]), "PosZ": str(ctrlEjes[2].ms.realPos[2]), 
+                    "PosX": str(ctrlEjes[1].ms.realPos[0]), "PosY": str(ctrlEjes[2].ms.realPos[1]), "PosZ": str(ctrlEjes[2].ms.realPos[2]), 
                     "StatX": str(ctrlEjes[2].ms.axisStatus[0]), "StatY": str(ctrlEjes[2].ms.axisStatus[1]), "StatZ": str(ctrlEjes[2].ms.axisStatus[2])})
 
 @app.route('/datos_json/status3', methods=['GET'])
-def fmc4030_status():
+def fmc4030_status3():
     
-    return jsonify({"Inputs": str(ctrlEjes[3].ms.inputStatus[0]), "Outputs": str(ctrlEjes[3].ms.outputStatus[0]), "LimitN": str(ctrlEjes[3].ms.limitNStatus[0]), 
-                    "LimitP": str(ctrlEjes[3].ms.limitPStatus[0]), "StatMach": str(ctrlEjes[3].ms.machineRunStatus[0]), "StatHome": str(ctrlEjes[3].ms.homeStatus[0]),
-                    "PosX": str(ctrlEjes[3].ms.realPos[0]), "PosY": str(ctrlEjes[3].ms.realPos[1]), "PosZ": str(ctrlEjes[3].ms.realPos[2]), 
-                    "StatX": str(ctrlEjes[3].ms.axisStatus[0]), "StatY": str(ctrlEjes[3].ms.axisStatus[1]), "StatZ": str(ctrlEjes[3].ms.axisStatus[2])})
+    return jsonify({"Inputs": str(ctrlEjes[2].ms.inputStatus[0]), "Outputs": str(ctrlEjes[3].ms.outputStatus[0]), "LimitN": str(ctrlEjes[3].ms.limitNStatus[0]), 
+                    "LimitP": str(ctrlEjes[2].ms.limitPStatus[0]), "StatMach": str(ctrlEjes[3].ms.machineRunStatus[0]), "StatHome": str(ctrlEjes[3].ms.homeStatus[0]),
+                    "PosX": str(ctrlEjes[2].ms.realPos[0]), "PosY": str(ctrlEjes[3].ms.realPos[1]), "PosZ": str(ctrlEjes[3].ms.realPos[2]), 
+                    "StatX": str(ctrlEjes[2].ms.axisStatus[0]), "StatY": str(ctrlEjes[3].ms.axisStatus[1]), "StatZ": str(ctrlEjes[3].ms.axisStatus[2])})
 
 @app.route('/datos_json/status4', methods=['GET'])
-def fmc4030_status():
+def fmc4030_status4():
     
-    return jsonify({"Inputs": str(ctrlEjes[4].ms.inputStatus[0]), "Outputs": str(ctrlEjes[4].ms.outputStatus[0]), "LimitN": str(ctrlEjes[4].ms.limitNStatus[0]), 
-                    "LimitP": str(ctrlEjes[4].ms.limitPStatus[0]), "StatMach": str(ctrlEjes[4].ms.machineRunStatus[0]), "StatHome": str(ctrlEjes[4].ms.homeStatus[0]),
-                    "PosX": str(ctrlEjes[4].ms.realPos[0]), "PosY": str(ctrlEjes[4].ms.realPos[1]), "PosZ": str(ctrlEjes[4].ms.realPos[2]), 
-                    "StatX": str(ctrlEjes[4].ms.axisStatus[0]), "StatY": str(ctrlEjes[4].ms.axisStatus[1]), "StatZ": str(ctrlEjes[4].ms.axisStatus[2])})
+    return jsonify({"Inputs": str(ctrlEjes[3].ms.inputStatus[0]), "Outputs": str(ctrlEjes[4].ms.outputStatus[0]), "LimitN": str(ctrlEjes[4].ms.limitNStatus[0]), 
+                    "LimitP": str(ctrlEjes[3].ms.limitPStatus[0]), "StatMach": str(ctrlEjes[4].ms.machineRunStatus[0]), "StatHome": str(ctrlEjes[4].ms.homeStatus[0]),
+                    "PosX": str(ctrlEjes[3].ms.realPos[0]), "PosY": str(ctrlEjes[4].ms.realPos[1]), "PosZ": str(ctrlEjes[4].ms.realPos[2]), 
+                    "StatX": str(ctrlEjes[3].ms.axisStatus[0]), "StatY": str(ctrlEjes[4].ms.axisStatus[1]), "StatZ": str(ctrlEjes[4].ms.axisStatus[2])})
 
 @app.route('/datos_json/connect', methods=['POST'])
 def fmc4030_connect():
-    CtrlId = int(request.json['Id'])
+    CtrlId = int(request.json['Id'])-1
     
     #Call connection method 
     ctrlEjes[CtrlId].connect_Machine()
@@ -62,7 +65,7 @@ def fmc4030_connect():
 
 @app.route('/datos_json/disconnect', methods=['POST'])
 def fmc4030_disconnect():
-    CtrlId = int(request.json['Id'])
+    CtrlId = int(request.json['Id'])-1
     
     #Call disconnection method 
     ctrlEjes[CtrlId].disconnect_Machine()
@@ -73,7 +76,7 @@ def fmc4030_disconnect():
 
 @app.route('/datos_json/set_output', methods=['POST'])
 def set_output():
-    CtrlId = int(request.json['Id'])
+    CtrlId = int(request.json['Id'])-1
     OutId = int(request.json['OutId'])
     OutState = int(request.json['OutState'])
     
@@ -84,9 +87,9 @@ def set_output():
 
 @app.route('/datos_json/stop_move', methods=['POST'])
 def axe_stop():
-    CtrlId = int(request.json['Id'])
+    CtrlId = int(request.json['Id'])-1
     AxeId = int(request.json['AxeId'])
-    AxeMode = int(request.json['Par1'])
+    AxeMode = int(request.json['Mode'])
     
     #Call stop axis method 
     ctrlEjes[CtrlId].stop_Axis(AxeId, AxeMode)
@@ -95,45 +98,45 @@ def axe_stop():
 
 @app.route('/datos_json/home_move', methods=['POST'])
 def axe_home():
-    CtrlId = int(request.json['Id'])
+    CtrlId = int(request.json['Id'])-1
     AxeId = int(request.json['AxeId'])
-    AxeSpeed = int(request.json['Par1'])
-    # AxeAccDec = int(request.json['Acc'])
-    # AxeHomeFall = int(request.json['Fall'])
-    # AxeDir = int(request.json['Dir'])
+    AxeSpeed = int(request.json['Speed'])
+    AxeAccDec = int(request.json['Acc'])
+    AxeHomeFall = int(request.json['Fall'])
+    AxeDir = int(request.json['Dir'])
 
     #Call home move method 
-    ctrlEjes[CtrlId].home_Move(AxeId, AxeSpeed)
+    ctrlEjes[CtrlId].home_Move(AxeId, AxeSpeed, AxeAccDec, AxeHomeFall, AxeDir)
     
     return jsonify({"funcion": "Home", "estado": "OK"})
 
 @app.route('/datos_json/jog_move', methods=['POST'])
 def axe_jog():
     #Parametros Json 
-    CtrlId = int(request.json['Id'])
+    CtrlId = int(request.json['Id'])-1
     AxeId = int(request.json['AxeId'])
-    AxePos = int(request.json['Par1'])
-    # AxeSpeed = int(request.json['Speed'])
-    # AxeAcc = int(request.json['Acc'])
-    # AxeDec = int(request.json['Dec'])
+    AxePos = int(request.json['Pos'])
+    AxeSpeed = int(request.json['Speed'])
+    AxeAcc = int(request.json['Acc'])
+    AxeDec = int(request.json['Dec'])
     
     #Call jog move method 
-    ctrlEjes[CtrlId].jog_Move(AxeId, AxePos)
+    ctrlEjes[CtrlId].jog_Move(AxeId, AxePos, AxeSpeed, AxeAcc, AxeDec)
 
     return jsonify({"funcion":"Jog", "estado": "OK"})
 
 @app.route('/datos_json/abs_move', methods=['POST'])
 def axe_absmove():
     # Parametros Json
-    CtrlId = int(request.json['Id'])
+    CtrlId = int(request.json['Id'])-1
     AxeId = int(request.json['AxeId'])
-    AxePos = int(request.json['Par1'])
-    AxeSpeed = int(request.json['Par2'])
-    # AxeAcc = int(request.json['Acc'])
-    # AxeDec = int(request.json['Dec'])
+    AxePos = int(request.json['Pos'])
+    AxeSpeed = int(request.json['Speed'])
+    AxeAcc = int(request.json['Acc'])
+    AxeDec = int(request.json['Dec'])
     
     #Call absolute move method 
-    ctrlEjes[CtrlId].abs_Move(AxeId, AxePos, AxeSpeed)
+    ctrlEjes[CtrlId].abs_Move(AxeId, AxePos, AxeSpeed, AxeAcc, AxeDec)
     
     time.sleep(0.3)
     
@@ -142,24 +145,24 @@ def axe_absmove():
 @app.route('/datos_json/rel_move', methods=['POST'])
 def axe_relmove():
      # Parametros Json
-    CtrlId = int(request.json['Id'])
+    CtrlId = int(request.json['Id'])-1
     AxeId = int(request.json['AxeId'])
-    AxePos = int(request.json['Par1'])
-    AxeSpeed = int(request.json['Par2'])
-    # AxeAcc = int(request.json['Acc'])
-    # AxeDec = int(request.json['Dec'])
+    AxePos = int(request.json['Pos'])
+    AxeSpeed = int(request.json['Speed'])
+    AxeAcc = int(request.json['Acc'])
+    AxeDec = int(request.json['Dec'])
     
     #Call relative move method 
-    ctrlEjes[CtrlId].rel_Move(AxeId, AxePos, AxeSpeed)
+    ctrlEjes[CtrlId].rel_Move(AxeId, AxePos, AxeSpeed, AxeAcc, AxeDec)
     
     return jsonify({"funcion":"Rel", "estado": "OK"})
 
 @app.route('/datos_json/2axis_move', methods=['POST'])
 def axe2_move():
      # Parametros Json
-    CtrlId = int(request.json['Id'])
+    CtrlId = int(request.json['Id'])-1
     AxeId = int(request.json['AxeId'])
-    EndX = int(request.json['Par1'])
+    EndX = int(request.json['EndX'])
     EndY = int(request.json['EndY'])
     AxeSpeed = int(request.json['Speed'])
     AxeAcc = int(request.json['Acc'])
@@ -173,7 +176,7 @@ def axe2_move():
 @app.route('/datos_json/3axis_move', methods=['POST'])
 def axe3_move():
      # Parametros Json
-    CtrlId = int(request.json['Id'])
+    CtrlId = int(request.json['Id'])-1
     EndX = int(request.json['EndX'])
     EndY = int(request.json['EndY'])
     EndZ = int(request.json['EndZ'])
@@ -189,7 +192,7 @@ def axe3_move():
 @app.route('/datos_json/2arc_move', methods=['POST'])
 def arc2_move():
      # Parametros Json
-    CtrlId = int(request.json['Id'])
+    CtrlId = int(request.json['Id'])-1
     AxeId = int(request.json['AxeId'])
     EndX = int(request.json['EndX'])
     EndY = int(request.json['EndY'])
@@ -208,19 +211,21 @@ def arc2_move():
 
 @app.route('/datos_json/seq_wirefeed', methods=['POST'])
 def seq_wirefeed():
-    CtrlId = int(request.json['Id'])
+    CtrlId = int(request.json['Id'])-1
     StepId = int(request.json['Par1'])
     
     step_status = "Idle"
 
     #Secuencia de Ejes y Actuadores
-    if CtrlId == 1:
+    if True:
         if StepId == 0:                                                     #Incializacion de ejes
-            ctrlEjes[1].set_Output(DOut0,0)
-            ctrlEjes[1].set_Output(DOut1,0)
-            if ctrlEjes[1].AxisX_Home==0: ctrlEjes[1].home_Move(axisX,35)
-            if ctrlEjes[1].AxisY_Home==0: ctrlEjes[1].home_Move(axisY,35)
-            if ctrlEjes[1].AxisZ_Home==0: ctrlEjes[1].home_Move(axisZ,35)
+            for ctrl in ctrlEjes:
+                ctrl.home_Move(axisX,35)
+                time.sleep(0.5)
+                ctrl.home_Move(axisY,35)
+                time.sleep(0.5)
+                if (ctrl != ctrlEjes[2]) and (ctrl != ctrlEjes[3]): ctrl.home_Move(axisZ,35)
+                time.sleep(0.5)
             NroAlambres = 0
             step_status = "Done"
         if StepId == 1:                                                     #Posicion Inicial
@@ -281,6 +286,16 @@ def seq_wirefeed():
                 # if ctrlEjes[1].AxisX_Home==1: ctrlEjes[1].abs_Move(axisX,2200,65)
                 # if ctrlEjes[1].AxisY_Home==1: ctrlEjes[1].abs_Move(axisY,2500,65)
                 if ctrlEjes[1].AxisZ_Home==1: ctrlEjes[1].abs_Move(axisZ,1000,55)
+        
+        if StepId == 7:                                                     #Posicionar Esmerilado                                           
+            # Move X Axis to Zero
+            ctrlEjes[2].abs_move(0, 0, 10)
+            ctrlEjes[3].abs_move(0, 0, 10)
+            
+            # Mov Y Axis to Initial Point
+            ctrlEjes[2].abs_move(1, -207, 10)
+            ctrlEjes[3].abs_move(1, -20, 10)
+    
     
     return jsonify({"funcion": "Step"+str(StepId), "estado": step_status})
 

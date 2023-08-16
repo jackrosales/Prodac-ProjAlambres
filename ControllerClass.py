@@ -14,7 +14,7 @@ class FMC4030:
     
     # Número del controlador, este número de identificación es único
     id = 1 
-    ip = "192.168.0.30"
+    ip = '192.168.0.30'
     port = 8088
     
     # Actual Pos
@@ -39,7 +39,7 @@ class FMC4030:
     DIn3 = False
     
     
-    def __init__(self, controller_id, ipAddr: str, port: int):
+    def __init__(self, controller_id: int, ipAddr: str, port: int):
         self.id = controller_id
         self.ip = ipAddr
         self.port = port
