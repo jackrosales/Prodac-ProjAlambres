@@ -7,7 +7,7 @@ import time
 import socket
 
 ctrlEjes=[] 
-ctrlEjes.append(FMC4030(1,'192.168.90.20',8088)) 
+ctrlEjes.append(FMC4030(1,'192.168.90.22',8088)) 
 # ctrlEjes.append(FMC4030(2,'192.168.90.21',8088)) 
 # ctrlEjes.append(FMC4030(3,'192.168.90.22',8088)) 
 # ctrlEjes.append(FMC4030(4,'192.168.90.23',8088)) 
@@ -25,34 +25,34 @@ def hello():
 @app.route('/datos_json/status1', methods=['GET'])
 def fmc4030_status1():
     
-    return jsonify({"Inputs": str(ctrlEjes[0].ms.inputStatus[0]), "Outputs": str(ctrlEjes[1].ms.outputStatus[0]), "LimitN": str(ctrlEjes[1].ms.limitNStatus[0]), 
-                    "LimitP": str(ctrlEjes[0].ms.limitPStatus[0]), "StatMach": str(ctrlEjes[1].ms.machineRunStatus[0]), "StatHome": str(ctrlEjes[1].ms.homeStatus[0]),
-                    "PosX": str(ctrlEjes[0].ms.realPos[0]), "PosY": str(ctrlEjes[1].ms.realPos[1]), "PosZ": str(ctrlEjes[1].ms.realPos[2]), 
-                    "StatX": str(ctrlEjes[0].ms.axisStatus[0]), "StatY": str(ctrlEjes[1].ms.axisStatus[1]), "StatZ": str(ctrlEjes[1].ms.axisStatus[2])})
+    return jsonify({"Inputs": str(ctrlEjes[0].ms.inputStatus[0]), "Outputs": str(ctrlEjes[0].ms.outputStatus[0]), "LimitN": str(ctrlEjes[0].ms.limitNStatus[0]), 
+                    "LimitP": str(ctrlEjes[0].ms.limitPStatus[0]), "StatMach": str(ctrlEjes[0].ms.machineRunStatus[0]), "StatHome": str(ctrlEjes[0].ms.homeStatus[0]),
+                    "PosX": str(ctrlEjes[0].ms.realPos[0]), "PosY": str(ctrlEjes[0].ms.realPos[1]), "PosZ": str(ctrlEjes[0].ms.realPos[2]), 
+                    "StatX": str(ctrlEjes[0].ms.axisStatus[0]), "StatY": str(ctrlEjes[0].ms.axisStatus[1]), "StatZ": str(ctrlEjes[0].ms.axisStatus[2])})
 
 @app.route('/datos_json/status2', methods=['GET'])
 def fmc4030_status2():
     
-    return jsonify({"Inputs": str(ctrlEjes[1].ms.inputStatus[0]), "Outputs": str(ctrlEjes[2].ms.outputStatus[0]), "LimitN": str(ctrlEjes[2].ms.limitNStatus[0]), 
-                    "LimitP": str(ctrlEjes[2].ms.limitPStatus[0]), "StatMach": str(ctrlEjes[2].ms.machineRunStatus[0]), "StatHome": str(ctrlEjes[2].ms.homeStatus[0]),
-                    "PosX": str(ctrlEjes[1].ms.realPos[0]), "PosY": str(ctrlEjes[2].ms.realPos[1]), "PosZ": str(ctrlEjes[2].ms.realPos[2]), 
-                    "StatX": str(ctrlEjes[2].ms.axisStatus[0]), "StatY": str(ctrlEjes[2].ms.axisStatus[1]), "StatZ": str(ctrlEjes[2].ms.axisStatus[2])})
+    return jsonify({"Inputs": str(ctrlEjes[1].ms.inputStatus[0]), "Outputs": str(ctrlEjes[1].ms.outputStatus[0]), "LimitN": str(ctrlEjes[1].ms.limitNStatus[0]), 
+                    "LimitP": str(ctrlEjes[1].ms.limitPStatus[0]), "StatMach": str(ctrlEjes[1].ms.machineRunStatus[0]), "StatHome": str(ctrlEjes[1].ms.homeStatus[0]),
+                    "PosX": str(ctrlEjes[1].ms.realPos[0]), "PosY": str(ctrlEjes[1].ms.realPos[1]), "PosZ": str(ctrlEjes[1].ms.realPos[2]), 
+                    "StatX": str(ctrlEjes[1].ms.axisStatus[0]), "StatY": str(ctrlEjes[1].ms.axisStatus[1]), "StatZ": str(ctrlEjes[1].ms.axisStatus[2])})
 
 @app.route('/datos_json/status3', methods=['GET'])
 def fmc4030_status3():
     
-    return jsonify({"Inputs": str(ctrlEjes[2].ms.inputStatus[0]), "Outputs": str(ctrlEjes[3].ms.outputStatus[0]), "LimitN": str(ctrlEjes[3].ms.limitNStatus[0]), 
-                    "LimitP": str(ctrlEjes[2].ms.limitPStatus[0]), "StatMach": str(ctrlEjes[3].ms.machineRunStatus[0]), "StatHome": str(ctrlEjes[3].ms.homeStatus[0]),
-                    "PosX": str(ctrlEjes[2].ms.realPos[0]), "PosY": str(ctrlEjes[3].ms.realPos[1]), "PosZ": str(ctrlEjes[3].ms.realPos[2]), 
-                    "StatX": str(ctrlEjes[2].ms.axisStatus[0]), "StatY": str(ctrlEjes[3].ms.axisStatus[1]), "StatZ": str(ctrlEjes[3].ms.axisStatus[2])})
+    return jsonify({"Inputs": str(ctrlEjes[2].ms.inputStatus[0]), "Outputs": str(ctrlEjes[2].ms.outputStatus[0]), "LimitN": str(ctrlEjes[2].ms.limitNStatus[0]), 
+                    "LimitP": str(ctrlEjes[2].ms.limitPStatus[0]), "StatMach": str(ctrlEjes[2].ms.machineRunStatus[0]), "StatHome": str(ctrlEjes[2].ms.homeStatus[0]),
+                    "PosX": str(ctrlEjes[2].ms.realPos[0]), "PosY": str(ctrlEjes[2].ms.realPos[1]), "PosZ": str(ctrlEjes[2].ms.realPos[2]), 
+                    "StatX": str(ctrlEjes[2].ms.axisStatus[0]), "StatY": str(ctrlEjes[2].ms.axisStatus[1]), "StatZ": str(ctrlEjes[2].ms.axisStatus[2])})
 
 @app.route('/datos_json/status4', methods=['GET'])
 def fmc4030_status4():
     
-    return jsonify({"Inputs": str(ctrlEjes[3].ms.inputStatus[0]), "Outputs": str(ctrlEjes[4].ms.outputStatus[0]), "LimitN": str(ctrlEjes[4].ms.limitNStatus[0]), 
-                    "LimitP": str(ctrlEjes[3].ms.limitPStatus[0]), "StatMach": str(ctrlEjes[4].ms.machineRunStatus[0]), "StatHome": str(ctrlEjes[4].ms.homeStatus[0]),
-                    "PosX": str(ctrlEjes[3].ms.realPos[0]), "PosY": str(ctrlEjes[4].ms.realPos[1]), "PosZ": str(ctrlEjes[4].ms.realPos[2]), 
-                    "StatX": str(ctrlEjes[3].ms.axisStatus[0]), "StatY": str(ctrlEjes[4].ms.axisStatus[1]), "StatZ": str(ctrlEjes[4].ms.axisStatus[2])})
+    return jsonify({"Inputs": str(ctrlEjes[3].ms.inputStatus[0]), "Outputs": str(ctrlEjes[3].ms.outputStatus[0]), "LimitN": str(ctrlEjes[3].ms.limitNStatus[0]), 
+                    "LimitP": str(ctrlEjes[3].ms.limitPStatus[0]), "StatMach": str(ctrlEjes[3].ms.machineRunStatus[0]), "StatHome": str(ctrlEjes[3].ms.homeStatus[0]),
+                    "PosX": str(ctrlEjes[3].ms.realPos[0]), "PosY": str(ctrlEjes[3].ms.realPos[1]), "PosZ": str(ctrlEjes[3].ms.realPos[2]), 
+                    "StatX": str(ctrlEjes[3].ms.axisStatus[0]), "StatY": str(ctrlEjes[3].ms.axisStatus[1]), "StatZ": str(ctrlEjes[3].ms.axisStatus[2])})
 
 @app.route('/datos_json/connect', methods=['POST'])
 def fmc4030_connect():

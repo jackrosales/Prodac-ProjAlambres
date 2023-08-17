@@ -17,6 +17,7 @@ axisZ = c_int(2)
 axisXY = c_uint(0x03)
 axisXZ = c_uint(0x05)
 axisYZ = c_uint(0x06)
+arcXY = c_int(0x07)
 
 
 # Status de controlador FMC4030

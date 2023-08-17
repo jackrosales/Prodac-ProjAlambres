@@ -23,8 +23,18 @@ class HTTPDataSender:
         except requests.exceptions.RequestException as e:
             print('HTTP POST request error:', e)
     
-    def receive_data(self):
-        self.data_get = requests.get(self.get_api_url)
-        return self.data_get
+    def receive_data(self, id: int):
+        try:
+            get_url = self.get_api_url + str(id)
+            response = requests.get(get_url)
+            self.data_get = response.json()
+            if response.status_code == 200:
+                print('HTTP POST request successful.')
+                return self.data_get
+            else:
+                print('HTTP POST request failed. Status code:', response.status_code)
+
+        except requests.exceptions.RequestException as e:
+            print('HTTP POST request error:', e)
 
 
