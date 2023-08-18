@@ -18,6 +18,7 @@ class HTTPDataSender:
             response = requests.post(post_url, json=self.data_post)
             if response.status_code == 200:
                 print('HTTP POST request successful.')
+                print(self.data_post)
             else:
                 print('HTTP POST request failed. Status code:', response.status_code)
         except requests.exceptions.RequestException as e:
@@ -29,12 +30,12 @@ class HTTPDataSender:
             response = requests.get(get_url)
             self.data_get = response.json()
             if response.status_code == 200:
-                print('HTTP POST request successful.')
+                print('HTTP GET request successful.')
                 return self.data_get
             else:
-                print('HTTP POST request failed. Status code:', response.status_code)
+                print('HTTP GET request failed. Status code:', response.status_code)
 
         except requests.exceptions.RequestException as e:
-            print('HTTP POST request error:', e)
+            print('HTTP GET request error:', e)
 
 

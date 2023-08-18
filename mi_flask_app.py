@@ -7,7 +7,7 @@ import time
 import socket
 
 ctrlEjes=[] 
-ctrlEjes.append(FMC4030(1,'192.168.90.22',8088)) 
+ctrlEjes.append(FMC4030(1,'192.168.90.20',8088)) 
 # ctrlEjes.append(FMC4030(2,'192.168.90.21',8088)) 
 # ctrlEjes.append(FMC4030(3,'192.168.90.22',8088)) 
 # ctrlEjes.append(FMC4030(4,'192.168.90.23',8088)) 
