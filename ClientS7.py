@@ -1,3 +1,4 @@
+import threading
 import requests
 import StatusClass
 import snap7
@@ -15,7 +16,7 @@ class PLCDataParser(HTTPDataSender):
     slot = 1
     idCtrl = 1
     conn_diag = 0
-    conn_stat_busy = False 
+    ctw_mask = { "AxisX": 0xFFFF, "AxisY": 0xFFFF, "AxisZ": 0xFFFF, "2Axis_XY": 0xFFFF, "3Axis_XYZ": 0xFFFF, "ARC_XY": 0xFFFF}
     
     data_struc = {
         "SYSTEM":{
@@ -106,6 +107,15 @@ class PLCDataParser(HTTPDataSender):
             }
     }
     
+    stw_fmc={
+        "Running" : False, "Pause": False, "Resume": False, "Stop": False, "LimitN": False, "LimitP": False, 
+        "Home": False, "HomeDone": False, "AutoRun": False, "LimitN_None": False, "LimitP_None": False, "Home_None": False, "Home_Overtime": False
+    }
+    
+    ctw_plc={
+        "AbsXY": False, "AbsXZ": False, "AbsYZ": False, "AbsXYZ": False, "ArcXY": False, "ArcXZ": False, "ArcYZ": False, "Lock": False,
+        "JogFwd": False, "JogRev": False, "Abs": False, "Rel": False, "Home": False, "Stop": False, "Pause": False, "Reset": False  
+    }
     
     def __init__(self, id, plc_ip, db_number, start, len):
         self.id = id
@@ -116,6 +126,9 @@ class PLCDataParser(HTTPDataSender):
         self.plc = snap7.client.Client()
         self.connect_plc()
         super().__init__('http://192.168.90.78:5000/datos_json/', 'http://192.168.90.78:5000/datos_json/status')
+        self.listening_thread = threading.Thread(target=self.listening)
+        self.listening_thread.daemon = True
+        self.listening_thread.start()
         
     def __del__(self):
         self.disconnect_plc()    
@@ -242,93 +255,96 @@ class PLCDataParser(HTTPDataSender):
         util.set_int(self.data_AxisZ_POSACT, 0, self.data_struc["AxisZ"]["PV_POS"])
         util.set_int(self.data_AxisZ_VELACT, 0, self.data_struc["AxisZ"]["PV_VEL"])
     
-    def comm_axis(self, AxisId=0):
-        Axis = "AxisX" if AxisId == 0 else "AxisY" if AxisId == 1 else "AxisZ" if AxisId == 2 else "AxisX"
-        comm_jog_fwd = True if self.data_struc[Axis]["CTW"] & 0x0100 else  False
-        comm_jog_rev = True if self.data_struc[Axis]["CTW"] & 0x0200 else  False
-        comm_abs_Axis = True if self.data_struc[Axis]["CTW"] & 0x0400 else  False
-        comm_rel = True if self.data_struc[Axis]["CTW"] & 0x0800 else  False
-        comm_home = True if self.data_struc[Axis]["CTW"] & 0x1000 else  False
-        comm_stop = True if self.data_struc[Axis]["CTW"] & 0x2000 else  False
+    def comm_axis(self, Axis):
+        print("CTW1: {} {}",Axis, self.data_struc[Axis]["CTW"], self.id)
+        ctw_tmp = self.data_struc[Axis]["CTW"]
+        self.data_struc[Axis]["CTW"] = self.data_struc[Axis]["CTW"] & self.ctw_mask[Axis]
+        self.ctw_mask[Axis] = ctw_tmp ^ 0xFFFF
+        print("CTW2: {} {}",self.data_struc[Axis]["CTW"], self.id)
+        ind = 0x0001
+        for x in self.ctw_plc:
+            self.ctw_plc[x] = True if self.data_struc[Axis]["CTW"] & ind else False
+            ind = ind <<1
+        # print(self.ctw_plc)
+    def axis_move(self, Axis):
+        AxisId = 0 if Axis == "AxisX" else 1 if Axis == "AxisY" else 2 if Axis == "AxisZ" else 0
+        
+        self.comm_axis(Axis)
         
         # Jog Move
-        if (comm_jog_fwd or comm_jog_rev) and not self.conn_stat_busy :
-            self.data_post = {"Id": self.id, "AxeId": AxisId, "Pos": 200 if comm_jog_fwd else -200, "Speed": self.data_struc[Axis]["SP_VEL"], "Acc": self.data_struc[Axis]["ACC"], "Dec": self.data_struc[Axis]["DEC"], "Mode": 1}
+        if (self.ctw_plc["JogFwd"] ^ self.ctw_plc["JogRev"]) :
+            self.data_post = {"Id": self.id, "AxeId": AxisId, "Pos": 20 if self.ctw_plc["JogFwd"] else -20, "Speed": self.data_struc[Axis]["SP_VEL"], "Acc": self.data_struc[Axis]["ACC"], "Dec": self.data_struc[Axis]["DEC"], "Mode": 1}
             self.send_data("jog_move")
-            self.conn_stat_busy = True
-            print(self.data_struc["AxisX"]["CTW"])   
-            
+             
         # Absolute Move
-        if comm_abs_Axis and not self.conn_stat_busy :
+        if self.ctw_plc["Abs"] :
             self.data_post = {"Id": self.id, "AxeId": AxisId, "Pos": self.data_struc[Axis]["SP_POS"], "Speed": self.data_struc[Axis]["SP_VEL"], "Acc": self.data_struc[Axis]["ACC"], "Dec": self.data_struc[Axis]["DEC"]}
             self.send_data("abs_move")
-            self.conn_stat_busy = True   
-            
+               
         # Relative Move
-        if comm_rel and not self.conn_stat_busy :
+        if self.ctw_plc["Rel"] :
             self.data_post = {"Id": self.id, "AxeId": AxisId, "Pos": self.data_struc[Axis]["SP_POS"], "Speed": self.data_struc[Axis]["SP_VEL"], "Acc": self.data_struc[Axis]["ACC"], "Dec": self.data_struc[Axis]["DEC"]}
-            self.send_data("rel_move")
-            self.conn_stat_busy = True  
+            self.send_data("rel_move") 
             
         # Home Move
-        if comm_home and not self.conn_stat_busy :
+        if self.ctw_plc["Home"] :
             self.data_post = {"Id": self.id, "AxeId": AxisId, "Speed": self.data_struc[Axis]["SP_HVEL"], "Acc": self.data_struc[Axis]["HACC"], "Fall": self.data_struc[Axis]["FALL"], "Dir": self.data_struc[Axis]["DIR"]}
-            self.send_data("home_move")
-            self.conn_stat_busy = True  
+            self.send_data("home_move") 
                 
         # Stop Move
-        if comm_stop and not self.conn_stat_busy :
-            self.data_post = {"Id": self.id, "AxeId": AxisId, "Mode": 2}
+        if self.ctw_plc["Stop"] :
+            self.data_post = {"Id": self.id, "AxeId": AxisId, "Mode": 1}
             self.send_data("stop_move")
-            self.conn_stat_busy = True 
+
     
     def send_http(self):
         # Axis X
-        self.comm_axis(0)
+        self.axis_move("AxisX")
         
         # Axis Y
-        self.comm_axis(1)
+        self.axis_move("AxisY")
         
         # Axis Z
-        self.comm_axis(2)
+        self.axis_move("AxisZ")
          
         # 2Axis Move
-        comm_abs_2AxisXY = True if self.data_struc["2Axis_XY"]["CTW"] & 0x0001 else  False
-        comm_abs_2AxisXZ = True if self.data_struc["2Axis_XY"]["CTW"] & 0x0002 else  False
-        comm_abs_2AxisYZ = True if self.data_struc["2Axis_XY"]["CTW"] & 0x0004 else  False
-    
-        if (comm_abs_2AxisXY or comm_abs_2AxisXZ or comm_abs_2AxisYZ) and not self.conn_stat_busy :
-            axe = 3 if comm_abs_2AxisXY else 5 if comm_abs_2AxisXZ else 6 if comm_abs_2AxisYZ else 3
+        self.comm_axis("2Axis_XY")
+        if (self.ctw_plc["AbsXY"] ^ self.ctw_plc["AbsXZ"] ^ self.ctw_plc["AbsYZ"]) :
+            axe = 3 if self.ctw_plc["AbsXY"] else 5 if self.ctw_plc["AbsXZ"] else 6 if self.ctw_plc["AbsYZ"] else 3
                 
             self.data_post = {"Id": self.id, "AxeId": axe, "EndX": self.data_struc["2AxisS_XY"]["SP_POSX"], "EndY": self.data_struc["2Axis_XY"]["SP_POSY"], "Speed": self.data_struc["2Axis_XY"]["SP_VEL"], "Acc": self.data_struc["2Axis_XY"]["ACC"], "Dec": self.data_struc["2Axis_XY"]["DEC"]}
             self.send_data("2axis_move")
-            self.conn_stat_busy = True  
             
         # 3Axis Move
-        comm_abs_3Axis = True if self.data_struc["3Axis_XYZ"]["CTW"] & 0x0008 else False
-        
-        if comm_abs_3Axis and not self.conn_stat_busy :
+        self.comm_axis("3Axis_XYZ")
+        if self.ctw_plc["AbsXYZ"] :
             self.data_post = {"Id": self.id, "EndX": self.data_struc["3Axis_XYZ"]["SP_POSX"], "EndY": self.data_struc["3Axis_XYZ"]["SP_POSY"], "EndZ": self.data_struc["3Axis_XYZ"]["SP_POSZ"], "Speed": self.data_struc["3Axis_XYZ"]["SP_VEL"], "Acc": self.data_struc["3Axis_XYZ"]["ACC"], "Dec": self.data_struc["3Axis_XYZ"]["DEC"]}
             self.send_data("3axis_move")
-            self.conn_stat_busy = True  
             
         # 2Arc Move
-        comm_abs_2Arc = True if self.data_struc["ARC_XY"]["CTW"] & 0x0010 else  False
-        
-        if comm_abs_2Arc and not self.conn_stat_busy :
-            self.data_post = {"Id": self.id, "AxeId": 3, "EndX": self.data_struc["ARC_XY"]["SP_POSX"], "EndY": self.data_struc["ARC_XY"]["SP_POSY"], "CenterX": self.data_struc["ARC_XY"]["CENTERX"], "CenterY": self.data_struc["ARC_XY"]["CENTERY"], "Radius": self.data_struc["ARC_XY"]["RADIUS"], "Speed": self.data_struc["ARC_XY"]["SP_VEL"], "Acc": self.data_struc["ARC_XY"]["ACC"], "Dec": self.data_struc["ARC_XY"]["DEC"], "Dir": self.data_struc["ARC_XY"]["DIR"]}
+        self.comm_axis("ARC_XY")
+        if (self.ctw_plc["ArcXY"] ^ self.ctw_plc["ArcXZ"] ^ self.ctw_plc["ArcYZ"]) :
+            axe = 3 if self.ctw_plc["ArcXY"] else 5 if self.ctw_plc["ArcXZ"] else 6 if self.ctw_plc["ArcYZ"] else 3
+            
+            self.data_post = {"Id": self.id, "AxeId": axe, "EndX": self.data_struc["ARC_XY"]["SP_POSX"], "EndY": self.data_struc["ARC_XY"]["SP_POSY"], "CenterX": self.data_struc["ARC_XY"]["CENTERX"], "CenterY": self.data_struc["ARC_XY"]["CENTERY"], "Radius": self.data_struc["ARC_XY"]["RADIUS"], "Speed": self.data_struc["ARC_XY"]["SP_VEL"], "Acc": self.data_struc["ARC_XY"]["ACC"], "Dec": self.data_struc["ARC_XY"]["DEC"], "Dir": self.data_struc["ARC_XY"]["DIR"]}
             self.send_data("2arc_move")
-            self.conn_stat_busy = True 
             
     def stw_proc(self, status: int):
-        status = (status or 0x0100) if status & 0x0001 else (status and 0xfeff) #Run
-        status = (status or 0x0200) if status & 0x0008 else (status and 0xfdff) #Stop
-        status = (status or 0x0400) if status & 0x0080 else (status and 0xfbff) #Home
-        status = (status or 0x0800) if status & 0x0010 else (status and 0xf7ff) #LimN
-        status = (status or 0x1000) if status & 0x0020 else (status and 0xefff) #LimP
-        status = (status or 0x4000) if (status & 0x0010) or (status & 0x0020) else (status and 0xbfff) #Lock
-        status = (status or 0x8000) if status & 0x0040 else (status and 0x7fff) #Home Done
-        return status
+        ind = 1
+        for x in self.stw_fmc:
+            self.stw_fmc[x] = True if status & ind else False
+            ind = ind<<1
+        # print("Status1: ", self.stw_fmc)
+        stw = 0
+        stw = (stw | 0x0100) if self.stw_fmc["Running"] else (stw & 0xfeff) #Run
+        stw = (stw | 0x0200) if self.stw_fmc["Stop"] else (stw & 0xfdff) #Stop
+        stw = (stw | 0x0400) if self.stw_fmc["Home"] else (stw & 0xfbff) #Home
+        stw = (stw | 0x0800) if self.stw_fmc["LimitN"] else (stw & 0xf7ff) #LimN
+        stw = (stw | 0x1000) if self.stw_fmc["LimitP"] else (stw & 0xefff) #LimP
+        stw = (stw | 0x4000) if self.stw_fmc["LimitN"] or self.stw_fmc["LimitP"] else (stw & 0xbfff) #Lock
+        stw = (stw | 0x8000) if self.stw_fmc["Home"] else (stw & 0x7fff) #Home Done
+        # print("Status2: ", stw)
+        return stw
  
     def recieve_http(self):
         get_data = self.receive_data(self.id)  
@@ -346,25 +362,17 @@ class PLCDataParser(HTTPDataSender):
         self.data_struc['AxisZ']['STW'] = self.stw_proc(int(get_data['StatZ']))
         
         # print(self.data_struc['AxisX']['PV_POS'])
-        # print(int(get_data['StatX']))
-        
-
-   
-FMC01 = PLCDataParser(1,'192.168.90.10',43,0,144)
-print (FMC01.data_struc["AxisX"]["STW"])
-
-while True:
-    if FMC01.data_struc["AxisX"]["CTW"] == 0: FMC01.conn_stat_busy =False
+        print(int(get_data['StatX']))
     
-    FMC01.get_plc_data()
-    time.sleep(0.1)
-    FMC01.get_fmc_values()
-    time.sleep(0.1)
-    FMC01.recieve_http()
-    time.sleep(0.1)
-    FMC01.send_http()
-    time.sleep(0.1)
-    FMC01.set_fmc_values()
-    time.sleep(0.1)
-    FMC01.set_plc_data()
-    time.sleep(0.1)
+    def listening(self):
+        while True:
+        
+            self.get_plc_data()
+            time.sleep(0.02)
+            self.get_fmc_values()
+            self.recieve_http()
+            self.send_http()
+            self.set_fmc_values()
+            self.set_plc_data()
+            time.sleep(0.02)
+

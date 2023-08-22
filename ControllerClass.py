@@ -1,6 +1,7 @@
 import threading
 from ctypes import *
 from StatusClass import *
+from ClientS7 import *
 from Proceso import *
 import socket
 import time
@@ -54,10 +55,22 @@ class FMC4030:
     
 
     def connect_Machine(self):
-        print("Conectando: {}".format(self.fmc4030.FMC4030_Open_Device(self.id, c_char_p(bytes(self.ip, 'utf-8')), self.port)))
-        time.sleep(0.3)
-        self.get_Status()
-        time.sleep(0.3)
+        
+        try:
+            conn = self.fmc4030.FMC4030_Open_Device(self.id, c_char_p(bytes(self.ip, 'utf-8')), self.port)
+            time.sleep(0.3)
+            if conn ==0 :
+                print("Connectado correctamente FMC: ", self.id)
+                self.get_Status()
+                time.sleep(0.3)
+                # CtrlParseS7 = PLCDataParser(self.id,'192.168.90.78', 43,0,144)
+            else: 
+                print("Error de conexion FMC: ",self.id)
+                raise ConnectionError(conn)
+        except ConnectionError:
+            print("Codiggo de error: ")
+            raise
+    
         print("Pos X: {:.2f} Y: {:.2f} Z: {:.2f}".format(self.ms.realPos[0], self.ms.realPos[1], self.ms.realPos[2]))
         print("Inputs: {}".format(self.ms.inputStatus[0]))
         print("Outputs: {}".format(self.ms.outputStatus[0]))

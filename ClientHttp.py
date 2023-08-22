@@ -17,8 +17,8 @@ class HTTPDataSender:
             post_url = self.post_api_url + func
             response = requests.post(post_url, json=self.data_post)
             if response.status_code == 200:
-                print('HTTP POST request successful.')
-                print(self.data_post)
+                print('HTTP POST request successful: ', func)
+                # print(self.data_post)
             else:
                 print('HTTP POST request failed. Status code:', response.status_code)
         except requests.exceptions.RequestException as e:

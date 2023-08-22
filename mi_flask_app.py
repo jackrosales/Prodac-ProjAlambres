@@ -1,14 +1,15 @@
 from flask import Flask, render_template, Response, session, request, redirect, url_for, flash, jsonify
 from ctypes import *
 from ControllerClass import *
+from ClientS7 import *
 from StatusClass import *
 from Proceso import *
 import time
 import socket
 
 ctrlEjes=[] 
-ctrlEjes.append(FMC4030(1,'192.168.90.20',8088)) 
-# ctrlEjes.append(FMC4030(2,'192.168.90.21',8088)) 
+ctrlEjes.append(FMC4030(1,'192.168.90.20',8088))
+ctrlEjes.append(FMC4030(2,'192.168.90.21',8088)) 
 # ctrlEjes.append(FMC4030(3,'192.168.90.22',8088)) 
 # ctrlEjes.append(FMC4030(4,'192.168.90.23',8088)) 
 
@@ -72,7 +73,7 @@ def fmc4030_disconnect():
    
     time.sleep(0.3)
     
-    return jsonify({"funcion": "Home", "estado": "OK"})
+    return jsonify({"funcion": "Disconnect", "estado": "OK"})
 
 @app.route('/datos_json/set_output', methods=['POST'])
 def set_output():
@@ -300,4 +301,9 @@ def seq_wirefeed():
     return jsonify({"funcion": "Step"+str(StepId), "estado": step_status})
 
 if __name__ == "__main__":
+    CtrlParseS701 = PLCDataParser(1,'192.168.90.10', 43,0,144)
+    # CtrlParseS702 = PLCDataParser(2,'192.168.90.10', 43,144,144)
+    # CtrlParseS703 = PLCDataParser(3,'192.168.90.10', 43,288,144)
+    # CtrlParseS704 = PLCDataParser(4,'192.168.90.10', 43,432,144)
     app.run(host='0.0.0.0')
+    
