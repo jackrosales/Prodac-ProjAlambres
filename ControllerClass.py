@@ -1,4 +1,5 @@
 import threading
+import random
 from ctypes import *
 from StatusClass import *
 from ClientS7 import *
@@ -59,10 +60,10 @@ class FMC4030:
         try:
             conn = self.fmc4030.FMC4030_Open_Device(self.id, c_char_p(bytes(self.ip, 'utf-8')), self.port)
             time.sleep(0.3)
-            if conn ==0 :
+            if conn == 0 :
                 print("Connectado correctamente FMC: ", self.id)
-                self.get_Status()
                 time.sleep(0.3)
+                self.get_Status()
                 # CtrlParseS7 = PLCDataParser(self.id,'192.168.90.78', 43,0,144)
             else: 
                 print("Error de conexion FMC: ",self.id)
@@ -103,8 +104,11 @@ class FMC4030:
         self.AxisZ_Run = True if self.ms.axisStatus[2] & 0x0001 else False
         #Set Actual Pos
         self.AxisX_RealPos = int(self.ms.realPos[0])
+        # print("Id: {} Act Pos: {}".format(self.id, self.AxisX_RealPos))
         self.AxisY_RealPos = int(self.ms.realPos[1])
+        # print("Id: {} Act Pos: {}".format(self.id, self.AxisY_RealPos))
         self.AxisZ_RealPos = int(self.ms.realPos[2])
+        # print("Id: {} Act Pos: {}".format(self.id, self.AxisZ_RealPos))
         
     
     def get_Input(self, IO):
@@ -123,20 +127,20 @@ class FMC4030:
         # Código para leer si el eje esta detenido
         match Axis:
             case 0: 
-                axeState = self.fmc4030.FMC4030_Check_Axis_Is_Stop(self.id, axisX)
+                axeState = True if self.fmc4030.FMC4030_Check_Axis_Is_Stop(self.id, axisX) else False
             case 1:
-                axeState = self.fmc4030.FMC4030_Check_Axis_Is_Stop(self.id, axisY)
+                axeState = True if self.fmc4030.FMC4030_Check_Axis_Is_Stop(self.id, axisY) else False
             case 2:
-                axeState = self.fmc4030.FMC4030_Check_Axis_Is_Stop(self.id, axisZ)
+                axeState = True if self.fmc4030.FMC4030_Check_Axis_Is_Stop(self.id, axisZ) else False
             case 3:
-                axeState = 1 if (self.fmc4030.FMC4030_Check_Axis_Is_Stop(self.id, axisX) and 
+                axeState = True if (self.fmc4030.FMC4030_Check_Axis_Is_Stop(self.id, axisX) and 
                             self.fmc4030.FMC4030_Check_Axis_Is_Stop(self.id, axisY) and 
-                            self.fmc4030.FMC4030_Check_Axis_Is_Stop(self.id, axisZ)) else 0
+                            self.fmc4030.FMC4030_Check_Axis_Is_Stop(self.id, axisZ)) else False
         
-        print("Axis is Stop: {} {}".format(Axis,axeState))
+        # print("Axis is Stop: {} {}".format(Axis,axeState))
         return axeState
         
-    def stop_Axis(self, Axis=axisX, Mode=2):
+    def stop_Axis(self, Axis=axisX, Mode=1):
         print("Stop: {}".format(self.fmc4030.FMC4030_Stop_Single_Axis(self.id, Axis, Mode)))
         time.sleep(0.3)
     
