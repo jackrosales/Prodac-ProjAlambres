@@ -155,20 +155,23 @@ class PLCDataParser(HTTPDataSender):
         # Axis X - Data Values
         ind = offset + 0
         for par in self.data_struc["AxisX"]:
-            self.data_struc["AxisX"][par] = util.get_int(self.data_control, ind)
-            ind+=2 
+            if (par != "STW") and (par != "PV_POS") and (par != "PV_VEL"): 
+                self.data_struc["AxisX"][par] = util.get_int(self.data_control, ind)
+                ind+=2 
         
         # Axis Y - Data Values
         ind = offset + 18
         for par in self.data_struc["AxisY"]:
-            self.data_struc["AxisY"][par] = util.get_int(self.data_control, ind)
-            ind+=2
+            if (par != "STW") and (par != "PV_POS") and (par != "PV_VEL"): 
+                self.data_struc["AxisY"][par] = util.get_int(self.data_control, ind)
+                ind+=2
         
         # Axis Z - Data Values
         ind = offset + 36
         for par in self.data_struc["AxisZ"]:
-            self.data_struc["AxisZ"][par] = util.get_int(self.data_control, ind)
-            ind+=2
+            if (par != "STW") and (par != "PV_POS") and (par != "PV_VEL"): 
+                self.data_struc["AxisZ"][par] = util.get_int(self.data_control, ind)
+                ind+=2
         
         # 2Axis XY - Data Values
         ind = offset + 54
@@ -206,11 +209,11 @@ class PLCDataParser(HTTPDataSender):
         util.set_int(self.data_status, offset+24, self.data_struc["AxisZ"]["PV_VEL"])
     
     def comm_axis(self, Axis):
-        # print("CTW1: {} {}",Axis, self.data_struc[Axis]["CTW"], self.id)
+        print("CTW1: {} {}",Axis, self.data_struc[Axis]["CTW"], self.id)
         ctw_tmp = self.data_struc[Axis]["CTW"]
         self.data_struc[Axis]["CTW"] = self.data_struc[Axis]["CTW"] & self.ctw_mask[Axis]
         self.ctw_mask[Axis] = ctw_tmp ^ 0xFFFF
-        # print("CTW2: {} {}",self.data_struc[Axis]["CTW"], self.id)
+        print("CTW2: {} {}",self.data_struc[Axis]["CTW"], self.id)
         ind = 0x0001
         for x in self.ctw_plc:
             self.ctw_plc[x] = True if self.data_struc[Axis]["CTW"] & ind else False
@@ -226,7 +229,9 @@ class PLCDataParser(HTTPDataSender):
         if (self.ctw_plc["JogFwd"] ^ self.ctw_plc["JogRev"]) :
             self.data_post = {"Id": self.id, "AxeId": AxisId, "Pos": 20 if self.ctw_plc["JogFwd"] else -20, "Speed": self.data_struc[Axis]["SP_VEL"], "Acc": self.data_struc[Axis]["ACC"], "Dec": self.data_struc[Axis]["DEC"], "Mode": 1}
             # self.send_data("jog_move")
-            CtrlFMC.jog_Move(AxisId, 20 if self.ctw_plc["JogFwd"] else -20, self.data_struc[Axis]["SP_VEL"], self.data_struc[Axis]["ACC"], self.data_struc[Axis]["DEC"])
+            pos = 20 if self.ctw_plc["JogFwd"] else -20
+            print("Jog:", self.ctw_plc["JogFwd"], self.ctw_plc["JogRev"], self.id, pos, self.data_struc[Axis]["SP_VEL"], self.data_struc[Axis]["ACC"], self.data_struc[Axis]["DEC"])
+            CtrlFMC.jog_Move(AxisId, pos, self.data_struc[Axis]["SP_VEL"], self.data_struc[Axis]["ACC"], self.data_struc[Axis]["DEC"])
              
         # Absolute Move
         if self.ctw_plc["Abs"] :
@@ -320,9 +325,9 @@ class PLCDataParser(HTTPDataSender):
         self.data_struc['AxisZ']['PV_POS'] = round(float(CtrlFMC.ms.realPos[2])) #round(float(get_data['PosZ']))
         self.data_struc['AxisZ']['STW'] = self.stw_proc(int(CtrlFMC.ms.axisStatus[2])) # get_data['StatZ']
         
-        print("FMC AxisX: ",self.data_struc['AxisX']['PV_POS'])
-        print("FMC AxisY: ",self.data_struc['AxisY']['PV_POS'])
-        print("FMC AxisZ: ",self.data_struc['AxisZ']['PV_POS'])
+        # print("FMC AxisX: ",self.data_struc['AxisX']['PV_POS'])
+        # print("FMC AxisY: ",self.data_struc['AxisY']['PV_POS'])
+        # print("FMC AxisZ: ",self.data_struc['AxisZ']['PV_POS'])
     
     def FMC_S7(self, CtrlFMC, offset_stat, offset_ctrl):
         self.get_fmc_values(offset_ctrl)
@@ -334,7 +339,7 @@ class PLCDataParser(HTTPDataSender):
         while True:
         
             self.get_plc_data()
-            time.sleep(0.02)
+            time.sleep(0.03)
             self.FMC_S7(self.CtrlFMC[0],0,0)
             self.set_plc_data()
 
