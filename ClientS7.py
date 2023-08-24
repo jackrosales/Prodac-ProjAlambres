@@ -16,7 +16,6 @@ class PLCDataParser(HTTPDataSender):
     plc_ip = '192.168.90.10'
     rack = 0
     slot = 1
-    CtrlFMC : FMC4030
     idCtrl = 1
     conn_diag = 0
     ctw_mask = { "AxisX": 0xFFFF, "AxisY": 0xFFFF, "AxisZ": 0xFFFF, "2Axis_XY": 0xFFFF, "3Axis_XYZ": 0xFFFF, "ARC_XY": 0xFFFF}
@@ -77,10 +76,7 @@ class PLCDataParser(HTTPDataSender):
             "SP_POSZ":   0,
             "SP_VEL":    0,
             "ACC":       0,
-            "DEC":      0,
-            "HACC":     0,
-            "DIR":      0,
-            "FALL":     0
+            "DEC":      0
             },
         "3Axis_XYZ":{
             "CTW":      0,
@@ -89,10 +85,7 @@ class PLCDataParser(HTTPDataSender):
             "SP_POSZ":   0,
             "SP_VEL":  0,
             "ACC":      0,
-            "DEC":      0,
-            "HACC":     0,
-            "DIR":      0,
-            "FALL":     0
+            "DEC":      0
             },
         "ARC_XY":{
             "CTW":      0,
@@ -104,9 +97,7 @@ class PLCDataParser(HTTPDataSender):
             "SP_VEL":  0,
             "ACC":      0,
             "DEC":      0,
-            "HACC":     0,
-            "DIR":      0,
-            "FALL":     0
+            "DIR":      0
             }
     }
     
@@ -120,12 +111,15 @@ class PLCDataParser(HTTPDataSender):
         "JogFwd": False, "JogRev": False, "Abs": False, "Rel": False, "Home": False, "Stop": False, "Pause": False, "Reset": False  
     }
     
-    def __init__(self, id, plc_ip, db_number, start, len, CtrlFMC: FMC4030):
+    def __init__(self, id, plc_ip, db_status, len_stat, start_fmc_stat, db_control, len_ctrl, start_fmc_ctrl, CtrlFMC):
         self.id = id
         self.plc_ip = plc_ip
-        self.db_number = db_number
-        self.start = start
-        self.len = len
+        self.db_status = db_status
+        self.start_fmc_stat = start_fmc_stat
+        self.len_stat = len_stat
+        self.db_control = db_control
+        self.start_fmc_ctrl = start_fmc_ctrl
+        self.len_ctrl = len_ctrl
         self.CtrlFMC = CtrlFMC
         self.plc = snap7.client.Client()
         self.connect_plc()
@@ -145,120 +139,71 @@ class PLCDataParser(HTTPDataSender):
         self.plc.disconnect()
 
     def get_plc_data(self):
-        self.data_gen = self.plc.db_read(self.db_number, self.start, 8)
-        # Axis X
-        self.data_AxisX_STW = self.plc.db_read(self.db_number, self.start+8, 2)
-        self.data_AxisX_DATA = self.plc.db_read(self.db_number, self.start+10, 8)
-        self.data_AxisX_POSACT = self.plc.db_read(self.db_number, self.start+18, 2)
-        self.data_AxisX_VELACT = self.plc.db_read(self.db_number, self.start+20, 2)
-        self.data_AxisX_PARAM = self.plc.db_read(self.db_number, self.start+22, 10)
-        # Axis Y
-        self.data_AxisY_STW = self.plc.db_read(self.db_number, self.start+32, 2)
-        self.data_AxisY_DATA = self.plc.db_read(self.db_number, self.start+34, 8)
-        self.data_AxisY_POSACT = self.plc.db_read(self.db_number, self.start+42, 2)
-        self.data_AxisY_VELACT = self.plc.db_read(self.db_number, self.start+44, 2)
-        self.data_AxisY_PARAM = self.plc.db_read(self.db_number, self.start+46, 10)
-        # Axis Z
-        self.data_AxisZ_STW = self.plc.db_read(self.db_number, self.start+56, 2)
-        self.data_AxisZ_DATA = self.plc.db_read(self.db_number, self.start+58, 8)
-        self.data_AxisZ_POSACT = self.plc.db_read(self.db_number, self.start+66, 2)
-        self.data_AxisZ_VELACT = self.plc.db_read(self.db_number, self.start+68, 2)
-        self.data_AxisZ_PARAM = self.plc.db_read(self.db_number, self.start+70, 10)
-        
-        self.data_2Axis = self.plc.db_read(self.db_number, self.start+80, 20)
-        self.data_3Axis = self.plc.db_read(self.db_number, self.start+100, 20)
-        self.data_2Arc = self.plc.db_read(self.db_number, self.start+120, 24)
-    
+        # Data FMC_STATUS
+        self.data_status = self.plc.db_read(self.db_status, 0, self.len_stat)
+        # Data FMC_CONTROL
+        self.data_control = self.plc.db_read(self.db_control, 0, self.len_ctrl)
+       
     def set_plc_data(self):
-        self.plc.db_write(self.db_number, self.start, self.data_gen)
-        # Axis X
-        self.plc.db_write(self.db_number, self.start+8, self.data_AxisX_STW)
-        self.plc.db_write(self.db_number, self.start+18, self.data_AxisX_POSACT)
-        self.plc.db_write(self.db_number, self.start+20, self.data_AxisX_VELACT)
-        # Axis Y
-        self.plc.db_write(self.db_number, self.start+32, self.data_AxisY_STW)
-        self.plc.db_write(self.db_number, self.start+42, self.data_AxisY_POSACT)
-        self.plc.db_write(self.db_number, self.start+44, self.data_AxisY_VELACT)
-        # Axis Z
-        self.plc.db_write(self.db_number, self.start+56, self.data_AxisZ_STW)
-        self.plc.db_write(self.db_number, self.start+66, self.data_AxisZ_POSACT)
-        self.plc.db_write(self.db_number, self.start+68, self.data_AxisZ_VELACT)
+        # Data FMC STATUS
+        self.plc.db_write(self.db_status, 0, self.data_status)
+       
         
-    def get_fmc_values(self):
+    def get_fmc_values(self, offset):
         # Parse Values PLC -> FMC
         
         # Axis X - Data Values
-        self.data_struc["AxisX"]["CTW"] = util.get_word(self.data_AxisX_DATA, 0)
-        self.data_struc["AxisX"]["SP_POS"] = util.get_int(self.data_AxisX_DATA, 2)
-        self.data_struc["AxisX"]["SP_VEL"] = util.get_int(self.data_AxisX_DATA, 4)  
-        self.data_struc["AxisX"]["SP_HVEL"] = util.get_int(self.data_AxisX_DATA, 6) 
-        self.data_struc["AxisX"]["ACC"] = util.get_int(self.data_AxisX_PARAM, 0)
-        self.data_struc["AxisX"]["DEC"] = util.get_int(self.data_AxisX_PARAM, 2)
-        self.data_struc["AxisX"]["HACC"] = util.get_int(self.data_AxisX_PARAM, 4)  
-        self.data_struc["AxisX"]["DIR"] = util.get_int(self.data_AxisX_PARAM, 6)
-        self.data_struc["AxisX"]["FALL"] = util.get_int(self.data_AxisX_PARAM, 8)  
+        ind = offset + 0
+        for par in self.data_struc["AxisX"]:
+            self.data_struc["AxisX"][par] = util.get_int(self.data_control, ind)
+            ind+=2 
         
         # Axis Y - Data Values
-        self.data_struc["AxisY"]["CTW"] = util.get_int(self.data_AxisY_DATA, 0)
-        self.data_struc["AxisY"]["SP_POS"] = util.get_int(self.data_AxisY_DATA, 2)
-        self.data_struc["AxisY"]["SP_VEL"] = util.get_int(self.data_AxisY_DATA, 4)  
-        self.data_struc["AxisY"]["SP_HVEL"] = util.get_int(self.data_AxisY_DATA, 6) 
-        self.data_struc["AxisY"]["ACC"] = util.get_int(self.data_AxisY_PARAM, 0)
-        self.data_struc["AxisY"]["DEC"] = util.get_int(self.data_AxisY_PARAM, 2)
-        self.data_struc["AxisY"]["HACC"] = util.get_int(self.data_AxisY_PARAM, 4)  
-        self.data_struc["AxisY"]["DIR"] = util.get_int(self.data_AxisY_PARAM, 6)
-        self.data_struc["AxisY"]["FALL"] = util.get_int(self.data_AxisY_PARAM, 8) 
+        ind = offset + 18
+        for par in self.data_struc["AxisY"]:
+            self.data_struc["AxisY"][par] = util.get_int(self.data_control, ind)
+            ind+=2
         
         # Axis Z - Data Values
-        self.data_struc["AxisZ"]["CTW"] = util.get_int(self.data_AxisZ_DATA, 0)
-        self.data_struc["AxisZ"]["SP_POS"] = util.get_int(self.data_AxisZ_DATA, 2)
-        self.data_struc["AxisZ"]["SP_VEL"] = util.get_int(self.data_AxisZ_DATA, 4)  
-        self.data_struc["AxisZ"]["SP_HVEL"] = util.get_int(self.data_AxisZ_DATA, 6) 
-        self.data_struc["AxisZ"]["ACC"] = util.get_int(self.data_AxisZ_PARAM, 0)
-        self.data_struc["AxisZ"]["DEC"] = util.get_int(self.data_AxisZ_PARAM, 2)
-        self.data_struc["AxisZ"]["HACC"] = util.get_int(self.data_AxisZ_PARAM, 4)  
-        self.data_struc["AxisZ"]["DIR"] = util.get_int(self.data_AxisZ_PARAM, 6)
-        self.data_struc["AxisZ"]["FALL"] = util.get_int(self.data_AxisZ_PARAM, 8) 
+        ind = offset + 36
+        for par in self.data_struc["AxisZ"]:
+            self.data_struc["AxisZ"][par] = util.get_int(self.data_control, ind)
+            ind+=2
         
         # 2Axis XY - Data Values
-        ind = 0
+        ind = offset + 54
         for parXY in self.data_struc["2Axis_XY"]:
-            self.data_struc["2Axis_XY"][parXY] = util.get_word(self.data_2Axis, ind)
+            self.data_struc["2Axis_XY"][parXY] = util.get_int(self.data_control, ind)
             ind+=2
         
         # 3Axis XYZ - Data Values    
-        ind = 0
+        ind = offset + 68
         for parXYZ in self.data_struc["3Axis_XYZ"]:
-            self.data_struc["3Axis_XYZ"][parXYZ] = util.get_int(self.data_3Axis, ind)
+            self.data_struc["3Axis_XYZ"][parXYZ] = util.get_int(self.data_control, ind)
             ind+=2
         
         # ARC XY - Data Values    
-        ind = 0
+        ind = offset + 82
         for parARC in self.data_struc["ARC_XY"]:
-            self.data_struc["ARC_XY"][parARC] = util.get_int(self.data_2Arc, ind)
+            self.data_struc["ARC_XY"][parARC] = util.get_int(self.data_control, ind)
             ind+=2
+        
     
-    def set_fmc_values(self):
+    def set_fmc_values(self, offset):
         # Parse values FMC -> PLC
-        util.set_bool(self.data_gen, 0, 0, self.data_struc["SYSTEM"]["LINK"])
-        util.set_int(self.data_gen, 2, self.data_struc["SYSTEM"]["STATUS"])
-        util.set_bool(self.data_gen, 4, 0, True if self.data_struc["SYSTEM"]["INPUTS"]&0x01 else False)
-        util.set_bool(self.data_gen, 4, 1, True if self.data_struc["SYSTEM"]["INPUTS"]&0x02 else False)
-        util.set_bool(self.data_gen, 4, 2, True if self.data_struc["SYSTEM"]["INPUTS"]&0x04 else False)
-        util.set_bool(self.data_gen, 4, 3, True if self.data_struc["SYSTEM"]["INPUTS"]&0x08 else False)
-        util.set_bool(self.data_gen, 6, 0, True if self.data_struc["SYSTEM"]["OUTPUTS"]&0x01 else False)
-        util.set_bool(self.data_gen, 6, 1, True if self.data_struc["SYSTEM"]["OUTPUTS"]&0x02 else False)
-        util.set_bool(self.data_gen, 6, 2, True if self.data_struc["SYSTEM"]["OUTPUTS"]&0x04 else False)
-        util.set_bool(self.data_gen, 6, 3, True if self.data_struc["SYSTEM"]["OUTPUTS"]&0x08 else False)
-        util.set_word(self.data_AxisX_STW, 0, self.data_struc["AxisX"]["STW"])
-        util.set_int(self.data_AxisX_POSACT, 0, self.data_struc["AxisX"]["PV_POS"])
-        util.set_int(self.data_AxisX_VELACT, 0, self.data_struc["AxisX"]["PV_VEL"])
-        util.set_word(self.data_AxisY_STW, 0, self.data_struc["AxisY"]["STW"])
-        util.set_int(self.data_AxisY_POSACT, 0, self.data_struc["AxisY"]["PV_POS"])
-        util.set_int(self.data_AxisY_VELACT, 0, self.data_struc["AxisY"]["PV_VEL"])
-        util.set_word(self.data_AxisZ_STW, 0, self.data_struc["AxisZ"]["STW"])
-        util.set_int(self.data_AxisZ_POSACT, 0, self.data_struc["AxisZ"]["PV_POS"])
-        util.set_int(self.data_AxisZ_VELACT, 0, self.data_struc["AxisZ"]["PV_VEL"])
+        util.set_bool(self.data_status, offset, 0, self.data_struc["SYSTEM"]["LINK"])
+        util.set_int(self.data_status, offset+2, self.data_struc["SYSTEM"]["STATUS"])
+        util.set_int(self.data_status, offset+4, self.data_struc["SYSTEM"]["INPUTS"])
+        util.set_int(self.data_status, offset+6, self.data_struc["SYSTEM"]["OUTPUTS"])
+        util.set_word(self.data_status, offset+8, self.data_struc["AxisX"]["STW"])
+        util.set_int(self.data_status, offset+10, self.data_struc["AxisX"]["PV_POS"])
+        util.set_int(self.data_status, offset+12, self.data_struc["AxisX"]["PV_VEL"])
+        util.set_word(self.data_status, offset+14, self.data_struc["AxisY"]["STW"])
+        util.set_int(self.data_status, offset+16, self.data_struc["AxisY"]["PV_POS"])
+        util.set_int(self.data_status, offset+18, self.data_struc["AxisY"]["PV_VEL"])
+        util.set_word(self.data_status, offset+20, self.data_struc["AxisZ"]["STW"])
+        util.set_int(self.data_status, offset+22, self.data_struc["AxisZ"]["PV_POS"])
+        util.set_int(self.data_status, offset+24, self.data_struc["AxisZ"]["PV_VEL"])
     
     def comm_axis(self, Axis):
         # print("CTW1: {} {}",Axis, self.data_struc[Axis]["CTW"], self.id)
@@ -271,7 +216,8 @@ class PLCDataParser(HTTPDataSender):
             self.ctw_plc[x] = True if self.data_struc[Axis]["CTW"] & ind else False
             ind = ind <<1
         # print(self.ctw_plc)
-    def axis_move(self, Axis):
+        
+    def axis_move(self, Axis, CtrlFMC):
         AxisId = 0 if Axis == "AxisX" else 1 if Axis == "AxisY" else 2 if Axis == "AxisZ" else 0
         
         self.comm_axis(Axis)
@@ -280,42 +226,42 @@ class PLCDataParser(HTTPDataSender):
         if (self.ctw_plc["JogFwd"] ^ self.ctw_plc["JogRev"]) :
             self.data_post = {"Id": self.id, "AxeId": AxisId, "Pos": 20 if self.ctw_plc["JogFwd"] else -20, "Speed": self.data_struc[Axis]["SP_VEL"], "Acc": self.data_struc[Axis]["ACC"], "Dec": self.data_struc[Axis]["DEC"], "Mode": 1}
             # self.send_data("jog_move")
-            self.CtrlFMC.jog_Move(AxisId, 20 if self.ctw_plc["JogFwd"] else -20, self.data_struc[Axis]["SP_VEL"], self.data_struc[Axis]["ACC"], self.data_struc[Axis]["DEC"], 1)
+            CtrlFMC.jog_Move(AxisId, 20 if self.ctw_plc["JogFwd"] else -20, self.data_struc[Axis]["SP_VEL"], self.data_struc[Axis]["ACC"], self.data_struc[Axis]["DEC"])
              
         # Absolute Move
         if self.ctw_plc["Abs"] :
             self.data_post = {"Id": self.id, "AxeId": AxisId, "Pos": self.data_struc[Axis]["SP_POS"], "Speed": self.data_struc[Axis]["SP_VEL"], "Acc": self.data_struc[Axis]["ACC"], "Dec": self.data_struc[Axis]["DEC"]}
             # self.send_data("abs_move")
-            self.CtrlFMC.abs_Move(AxisId, self.data_struc[Axis]["SP_POS"], self.data_struc[Axis]["SP_VEL"], self.data_struc[Axis]["ACC"], self.data_struc[Axis]["DEC"])
+            CtrlFMC.abs_Move(AxisId, self.data_struc[Axis]["SP_POS"], self.data_struc[Axis]["SP_VEL"], self.data_struc[Axis]["ACC"], self.data_struc[Axis]["DEC"])
                
         # Relative Move
         if self.ctw_plc["Rel"] :
             self.data_post = {"Id": self.id, "AxeId": AxisId, "Pos": self.data_struc[Axis]["SP_POS"], "Speed": self.data_struc[Axis]["SP_VEL"], "Acc": self.data_struc[Axis]["ACC"], "Dec": self.data_struc[Axis]["DEC"]}
             # self.send_data("rel_move")
-            self.CtrlFMC.rel_Move(AxisId, self.data_struc[Axis]["SP_POS"], self.data_struc[Axis]["SP_VEL"], self.data_struc[Axis]["ACC"], self.data_struc[Axis]["DEC"]) 
+            CtrlFMC.rel_Move(AxisId, self.data_struc[Axis]["SP_POS"], self.data_struc[Axis]["SP_VEL"], self.data_struc[Axis]["ACC"], self.data_struc[Axis]["DEC"]) 
             
         # Home Move
         if self.ctw_plc["Home"] :
             self.data_post = {"Id": self.id, "AxeId": AxisId, "Speed": self.data_struc[Axis]["SP_HVEL"], "Acc": self.data_struc[Axis]["HACC"], "Fall": self.data_struc[Axis]["FALL"], "Dir": self.data_struc[Axis]["DIR"]}
             # self.send_data("home_move") 
-            self.CtrlFMC.home_Move(AxisId, self.data_struc[Axis]["SP_HVEL"], self.data_struc[Axis]["HACC"], self.data_struc[Axis]["FALL"], self.data_struc[Axis]["DIR"])
+            CtrlFMC.home_Move(AxisId, self.data_struc[Axis]["SP_HVEL"], self.data_struc[Axis]["HACC"], self.data_struc[Axis]["FALL"], self.data_struc[Axis]["DIR"])
                 
         # Stop Move
         if self.ctw_plc["Stop"] :
             self.data_post = {"Id": self.id, "AxeId": AxisId, "Mode": 1}
             # self.send_data("stop_move")
-            self.CtrlFMC.stop_Axis(AxisId, 1)
+            CtrlFMC.stop_Axis(AxisId, 1)
 
     
-    def send_http(self):
+    def send_http(self, CtrlFMC):
         # Axis X
-        self.axis_move("AxisX")
+        self.axis_move("AxisX", CtrlFMC)
         
         # Axis Y
-        self.axis_move("AxisY")
+        self.axis_move("AxisY", CtrlFMC)
         
         # Axis Z
-        self.axis_move("AxisZ")
+        self.axis_move("AxisZ", CtrlFMC)
          
         # 2Axis Move
         self.comm_axis("2Axis_XY")
@@ -324,14 +270,14 @@ class PLCDataParser(HTTPDataSender):
                 
             self.data_post = {"Id": self.id, "AxeId": axe, "EndX": self.data_struc["2AxisS_XY"]["SP_POSX"], "EndY": self.data_struc["2Axis_XY"]["SP_POSY"], "Speed": self.data_struc["2Axis_XY"]["SP_VEL"], "Acc": self.data_struc["2Axis_XY"]["ACC"], "Dec": self.data_struc["2Axis_XY"]["DEC"]}
             # self.send_data("2axis_move")
-            self.CtrlFMC.move_2Axis(axe, self.data_struc["2AxisS_XY"]["SP_POSX"], self.data_struc["2Axis_XY"]["SP_POSY"], self.data_struc["2Axis_XY"]["SP_VEL"], self.data_struc["2Axis_XY"]["ACC"], self.data_struc["2Axis_XY"]["DEC"])
+            CtrlFMC.move_2Axis(axe, self.data_struc["2AxisS_XY"]["SP_POSX"], self.data_struc["2Axis_XY"]["SP_POSY"], self.data_struc["2Axis_XY"]["SP_VEL"], self.data_struc["2Axis_XY"]["ACC"], self.data_struc["2Axis_XY"]["DEC"])
             
         # 3Axis Move
         self.comm_axis("3Axis_XYZ")
         if self.ctw_plc["AbsXYZ"] :
             self.data_post = {"Id": self.id, "EndX": self.data_struc["3Axis_XYZ"]["SP_POSX"], "EndY": self.data_struc["3Axis_XYZ"]["SP_POSY"], "EndZ": self.data_struc["3Axis_XYZ"]["SP_POSZ"], "Speed": self.data_struc["3Axis_XYZ"]["SP_VEL"], "Acc": self.data_struc["3Axis_XYZ"]["ACC"], "Dec": self.data_struc["3Axis_XYZ"]["DEC"]}
             # self.send_data("3axis_move")
-            self.CtrlFMC.move_3Axis(self.data_struc["3Axis_XYZ"]["SP_POSX"], self.data_struc["3Axis_XYZ"]["SP_POSY"], self.data_struc["3Axis_XYZ"]["SP_POSZ"], self.data_struc["3Axis_XYZ"]["SP_VEL"], self.data_struc["3Axis_XYZ"]["ACC"], self.data_struc["3Axis_XYZ"]["DEC"])
+            CtrlFMC.move_3Axis(self.data_struc["3Axis_XYZ"]["SP_POSX"], self.data_struc["3Axis_XYZ"]["SP_POSY"], self.data_struc["3Axis_XYZ"]["SP_POSZ"], self.data_struc["3Axis_XYZ"]["SP_VEL"], self.data_struc["3Axis_XYZ"]["ACC"], self.data_struc["3Axis_XYZ"]["DEC"])
             
         # 2Arc Move
         self.comm_axis("ARC_XY")
@@ -340,7 +286,7 @@ class PLCDataParser(HTTPDataSender):
             
             self.data_post = {"Id": self.id, "AxeId": axe, "EndX": self.data_struc["ARC_XY"]["SP_POSX"], "EndY": self.data_struc["ARC_XY"]["SP_POSY"], "CenterX": self.data_struc["ARC_XY"]["CENTERX"], "CenterY": self.data_struc["ARC_XY"]["CENTERY"], "Radius": self.data_struc["ARC_XY"]["RADIUS"], "Speed": self.data_struc["ARC_XY"]["SP_VEL"], "Acc": self.data_struc["ARC_XY"]["ACC"], "Dec": self.data_struc["ARC_XY"]["DEC"], "Dir": self.data_struc["ARC_XY"]["DIR"]}
             # self.send_data("2arc_move")
-            self.CtrlFMC.move_Arc2Axis(axe, self.data_struc["ARC_XY"]["SP_POSX"], self.data_struc["ARC_XY"]["SP_POSY"], self.data_struc["ARC_XY"]["CENTERX"], self.data_struc["ARC_XY"]["CENTERY"], self.data_struc["ARC_XY"]["RADIUS"], self.data_struc["ARC_XY"]["SP_VEL"], self.data_struc["ARC_XY"]["ACC"], self.data_struc["ARC_XY"]["DEC"], self.data_struc["ARC_XY"]["DIR"])
+            CtrlFMC.move_Arc2Axis(axe, self.data_struc["ARC_XY"]["SP_POSX"], self.data_struc["ARC_XY"]["SP_POSY"], self.data_struc["ARC_XY"]["CENTERX"], self.data_struc["ARC_XY"]["CENTERY"], self.data_struc["ARC_XY"]["RADIUS"], self.data_struc["ARC_XY"]["SP_VEL"], self.data_struc["ARC_XY"]["ACC"], self.data_struc["ARC_XY"]["DEC"], self.data_struc["ARC_XY"]["DIR"])
             
     def stw_proc(self, status: int):
         ind = 1
@@ -359,34 +305,37 @@ class PLCDataParser(HTTPDataSender):
         # print("Status2: ", stw)
         return stw
  
-    def recieve_http(self):
+    def recieve_http(self, CtrlFMC):
         # get_data = self.receive_data(self.id)  
         # Data I/O 
-        self.data_struc['SYSTEM']['INPUTS'] = int(self.CtrlFMC.ms.inputStatus[0]) # int(get_data['Inputs']) 
-        self.data_struc['SYSTEM']['OUTPUTS'] = int(self.CtrlFMC.ms.outputStatus[0]) # int(get_data['Outputs'])
+        self.data_struc['SYSTEM']['INPUTS'] = int(CtrlFMC.ms.inputStatus[0]) # int(get_data['Inputs']) 
+        self.data_struc['SYSTEM']['OUTPUTS'] = int(CtrlFMC.ms.outputStatus[0]) # int(get_data['Outputs'])
         # Data Axis X
-        self.data_struc['AxisX']['PV_POS'] = round(float(self.CtrlFMC.realPos[0])) # round(float(get_data['PosX']))
-        self.data_struc['AxisX']['STW'] = self.stw_proc(int(self.CtrlFMC.ms.axisStatus[0])) #get_data['StatX']
+        self.data_struc['AxisX']['PV_POS'] = round(float(CtrlFMC.ms.realPos[0])) # round(float(get_data['PosX']))
+        self.data_struc['AxisX']['STW'] = self.stw_proc(int(CtrlFMC.ms.axisStatus[0])) #get_data['StatX']
         # Data Axis Y
-        self.data_struc['AxisY']['PV_POS'] = round(float(self.CtrlFMC.realPos[1])) #round(float(get_data['PosY']))
-        self.data_struc['AxisY']['STW'] = self.stw_proc(int(self.CtrlFMC.ms.axisStatus[1])) # get_data['StatY']
+        self.data_struc['AxisY']['PV_POS'] = round(float(CtrlFMC.ms.realPos[1])) #round(float(get_data['PosY']))
+        self.data_struc['AxisY']['STW'] = self.stw_proc(int(CtrlFMC.ms.axisStatus[1])) # get_data['StatY']
         # Data Axis Y
-        self.data_struc['AxisZ']['PV_POS'] = round(float(self.CtrlFMC.realPos[1])) #round(float(get_data['PosZ']))
-        self.data_struc['AxisZ']['STW'] = self.stw_proc(int(self.CtrlFMC.ms.axisStatus[2])) # get_data['StatZ']
+        self.data_struc['AxisZ']['PV_POS'] = round(float(CtrlFMC.ms.realPos[2])) #round(float(get_data['PosZ']))
+        self.data_struc['AxisZ']['STW'] = self.stw_proc(int(CtrlFMC.ms.axisStatus[2])) # get_data['StatZ']
         
         print("FMC AxisX: ",self.data_struc['AxisX']['PV_POS'])
         print("FMC AxisY: ",self.data_struc['AxisY']['PV_POS'])
         print("FMC AxisZ: ",self.data_struc['AxisZ']['PV_POS'])
+    
+    def FMC_S7(self, CtrlFMC, offset_stat, offset_ctrl):
+        self.get_fmc_values(offset_ctrl)
+        self.recieve_http(CtrlFMC)
+        self.send_http(CtrlFMC)
+        self.set_fmc_values(offset_stat)
     
     def listening(self):
         while True:
         
             self.get_plc_data()
             time.sleep(0.02)
-            self.get_fmc_values()
-            self.recieve_http()
-            self.send_http()
-            self.set_fmc_values()
+            self.FMC_S7(self.CtrlFMC[0],0,0)
             self.set_plc_data()
 
 
