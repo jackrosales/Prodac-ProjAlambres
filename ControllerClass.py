@@ -180,9 +180,10 @@ class FMC4030:
         time.sleep(0.3)
 
     def listening(self):
+        
         while True:
             # Lectura de Status general
-            self.get_Status()
+            # self.get_Status()
             # Control Digital Output 1 - Axis X - Switching positiong 1500mm
             if (self.AxisX_RealPos > 1500) and (self.AxisX_Run==True) and (self.AxisX_Home==True): 
                 self.set_Output(DOut0,1)

@@ -111,6 +111,9 @@ class PLCDataParser(HTTPDataSender):
         "JogFwd": False, "JogRev": False, "Abs": False, "Rel": False, "Home": False, "Stop": False, "Pause": False, "Reset": False  
     }
     
+    fmc_struc= [data_struc, stw_fmc, ctw_plc, ctw_mask]
+    fmc_data = fmc_struc * 4
+    
     def __init__(self, id, plc_ip, db_status, len_stat, start_fmc_stat, db_control, len_ctrl, start_fmc_ctrl, CtrlFMC):
         self.id = id
         self.plc_ip = plc_ip
@@ -124,9 +127,11 @@ class PLCDataParser(HTTPDataSender):
         self.plc = snap7.client.Client()
         self.connect_plc()
         super().__init__('http://192.168.90.78:5000/datos_json/', 'http://192.168.90.78:5000/datos_json/status')
-        self.listening_thread = threading.Thread(target=self.listening)
-        self.listening_thread.daemon = True
-        self.listening_thread.start()
+        self.listening_datapool = threading.Thread(target=self.proc_data)
+        self.listening_datapool.daemon = True
+        self.listening_datapool.start()
+        self.listening_fmc = threading.Thread(target=self.proc_fmc)
+        self.listening_fmc.daemon = True
         
     def __del__(self):
         self.disconnect_plc()    
@@ -209,11 +214,11 @@ class PLCDataParser(HTTPDataSender):
         util.set_int(self.data_status, offset+24, self.data_struc["AxisZ"]["PV_VEL"])
     
     def comm_axis(self, Axis):
-        print("CTW1: {} {}",Axis, self.data_struc[Axis]["CTW"], self.id)
+        # print("CTW1: {} {}",Axis, self.data_struc[Axis]["CTW"], self.id)
         ctw_tmp = self.data_struc[Axis]["CTW"]
         self.data_struc[Axis]["CTW"] = self.data_struc[Axis]["CTW"] & self.ctw_mask[Axis]
         self.ctw_mask[Axis] = ctw_tmp ^ 0xFFFF
-        print("CTW2: {} {}",self.data_struc[Axis]["CTW"], self.id)
+        # print("CTW2: {} {}",self.data_struc[Axis]["CTW"], self.id)
         ind = 0x0001
         for x in self.ctw_plc:
             self.ctw_plc[x] = True if self.data_struc[Axis]["CTW"] & ind else False
@@ -335,12 +340,38 @@ class PLCDataParser(HTTPDataSender):
         self.send_http(CtrlFMC)
         self.set_fmc_values(offset_stat)
     
-    def listening(self):
-        while True:
+    def proc_data(self):
         
-            self.get_plc_data()
+        self.get_plc_data()
+        self.listening_fmc.start()
+         
+        while True:
+            time.sleep(0.05)
+            self.set_plc_data()
+            time.sleep(0.05)
+            self.get_plc_data() 
+    
+    def proc_fmc(self):
+        
+        # self.listening_fmc02.start()
+        
+        while(True):
+            self.CtrlFMC[0].get_Status()
             time.sleep(0.03)
             self.FMC_S7(self.CtrlFMC[0],0,0)
-            self.set_plc_data()
+            time.sleep(0.03)
+            self.CtrlFMC[1].get_Status()
+            time.sleep(0.03)
+            self.FMC_S7(self.CtrlFMC[1],26,102)
+            time.sleep(0.03)
+            self.CtrlFMC[2].get_Status()
+            time.sleep(0.03)
+            self.FMC_S7(self.CtrlFMC[2],52,204)
+            time.sleep(0.03)
+            self.CtrlFMC[3].get_Status()
+            time.sleep(0.03)
+            self.FMC_S7(self.CtrlFMC[3],78,306)
+            time.sleep(0.03)
+
 
 
