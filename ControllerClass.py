@@ -206,7 +206,7 @@ class FMC4030:
         self.enable_status = False
         
         while True:
-            if self.DIn0:
+            pass
                 
             # if not (self.get_AxisIsStop(axisX)): 
             #     self.get_AxisCurrentPos(axisX)
@@ -227,4 +227,3 @@ class FMC4030:
                 
         
           
-
