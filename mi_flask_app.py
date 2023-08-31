@@ -10,17 +10,12 @@ import socket
 ctrlEjes=[] 
 ctrlEjes.append(FMC4030(1,'192.168.90.20',8088))
 time.sleep(1)
-ctrlEjes.append(FMC4030(2,'192.168.90.21',8089)) 
+ctrlEjes.append(FMC4030(2,'192.168.90.21',8088)) 
 time.sleep(1)
 ctrlEjes.append(FMC4030(3,'192.168.90.22',8088)) 
 time.sleep(1)
 ctrlEjes.append(FMC4030(4,'192.168.90.23',8088)) 
 time.sleep(1)
-
-
-          
-time.sleep(1)
-
 
 app = Flask(__name__)
 
