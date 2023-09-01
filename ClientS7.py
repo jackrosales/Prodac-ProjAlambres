@@ -131,9 +131,9 @@ class PLCDataParser(HTTPDataSender):
         super().__init__('http://192.168.90.78:5000/datos_json/', 'http://192.168.90.78:5000/datos_json/status')
         self.listening_datapool = threading.Thread(target=self.proc_data)
         self.listening_datapool.daemon = True
-        self.listening_datapool.start()
         self.listening_fmc = threading.Thread(target=self.proc_fmc)
         self.listening_fmc.daemon = True
+        self.listening_datapool.start()
         
     def __del__(self):
         self.disconnect_plc()    
@@ -141,20 +141,21 @@ class PLCDataParser(HTTPDataSender):
     def connect_plc(self):
         self.conn = self.plc.connect(self.plc_ip, self.rack, self.slot)
         time.sleep(0.5)
+        # Data FMC_STATUS
+        self.data_status = self.plc.db_read(self.db_status, 0, self.len_stat)
 
     def disconnect_plc(self):
+        
         self.plc.disconnect()
 
     def get_plc_data(self):
-        # Data FMC_STATUS
-        self.data_status = self.plc.db_read(self.db_status, 0, self.len_stat)
+        
         # Data FMC_CONTROL
         self.data_control = self.plc.db_read(self.db_control, 0, self.len_ctrl)
        
     def set_plc_data(self):
         # Data FMC STATUS
         self.plc.db_write(self.db_status, 0, self.data_status)
-       
         
     def get_fmc_values(self, offset):
         # Parse Values PLC -> FMC
@@ -337,6 +338,7 @@ class PLCDataParser(HTTPDataSender):
         # print("FMC AxisZ: ",self.data_struc['AxisZ']['PV_POS'])
     
     def FMC_S7(self, CtrlFMC, offset_stat, offset_ctrl):
+        
         self.get_fmc_values(offset_ctrl)
         self.send_http(CtrlFMC)
         self.recieve_http(CtrlFMC)
@@ -344,36 +346,35 @@ class PLCDataParser(HTTPDataSender):
     
     def proc_data(self):
         
-        self.get_plc_data()
-        self.listening_fmc.start()
-         
-        while True:
-            time.sleep(0.1)
-            self.set_plc_data()
-            time.sleep(0.3)
-            self.get_plc_data() 
-    
-    def proc_fmc(self):
-        
-        #self.listening_fmc02.start()
-        # for x in range(4):
-        #     self.CtrlFMC[x].disconnect_Machine()
-        #     time.sleep(0.05)
-        
         while(True):
             
             axis_addr =[[0, 0], [26, 102], [52, 204], [78, 306]]
+            
+            start_time_total = time.perf_counter()
+            self.get_plc_data()
+        
             for x in range(4):
+                start_time = time.perf_counter()
                 self.id = x
                 # req_status = self.CtrlFMC[self.id].connect_Machine()
-                req_status = self.CtrlFMC[self.id].get_Status()
-                time.sleep(0.1)
-                if req_status != 0 :
+                # req_status = self.CtrlFMC[self.id].get_Status()
+                if x < 5:
                     self.CtrlFMC[self.id].get_Status()
                     self.FMC_S7(self.CtrlFMC[self.id], axis_addr[x][0], axis_addr[x][1])
-                    time.sleep(0.05)
                     # self.CtrlFMC[self.id].disconnect_Machine()
                 else: print("Error connection: {}".format(self.id))
+                end_time = time.perf_counter()
+                print(end_time - start_time, self.id, "seconds FMC")
+            self.set_plc_data()
+            end_time_total = time.perf_counter()
+            print(end_time_total - start_time_total, self.id, "seconds FMC")    
+       
+    
+    def proc_fmc(self):
+        
+        pass
+        
+        
             
             
 

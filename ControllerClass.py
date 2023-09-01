@@ -92,7 +92,7 @@ class FMC4030:
     def get_Status(self):
         # Código para leer status de la máquina
         req_stat = self.fmc4030.FMC4030_Get_Machine_Status(self.id, pointer(self.ms))
-        time.sleep(0.05)
+        time.sleep(0.03)
         #Din 01: XS001
         self.DIn0 = False if self.ms.inputStatus[0] & 0x0001 else True
         self.DIn1 = False if self.ms.inputStatus[0] & 0x0002 else True
@@ -144,7 +144,7 @@ class FMC4030:
                             self.fmc4030.FMC4030_Check_Axis_Is_Stop(self.id, axisY) and 
                             self.fmc4030.FMC4030_Check_Axis_Is_Stop(self.id, axisZ)) else False
         
-        time.sleep(0.1)
+        time.sleep(0.03)
         print("Axis is Stop: {} {}".format(Axis, self.axisStop))
         return self.axisStop
     
