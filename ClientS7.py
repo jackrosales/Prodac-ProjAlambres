@@ -108,7 +108,7 @@ class PLCDataParser(HTTPDataSender):
     }
     
     ctw_plc={
-        "AbsXY": False, "AbsXZ": False, "AbsYZ": False, "AbsXYZ": False, "ArcXY": False, "ArcXZ": False, "ArcYZ": False, "Lock": False,
+        "AbsXY": False, "AbsXZ": False, "AbsYZ": False, "AbsXYZ": False, "ArcXY": False, "ArcXZ": False, "ArcYZ": False, "StopRun": False,
         "JogFwd": False, "JogRev": False, "Abs": False, "Rel": False, "Home": False, "Stop": False, "Pause": False, "Reset": False  
     }
     
@@ -356,13 +356,17 @@ class PLCDataParser(HTTPDataSender):
             for x in range(4):
                 start_time = time.perf_counter()
                 self.id = x
-                # req_status = self.CtrlFMC[self.id].connect_Machine()
-                # req_status = self.CtrlFMC[self.id].get_Status()
-                if x < 5:
-                    self.CtrlFMC[self.id].get_Status()
-                    self.FMC_S7(self.CtrlFMC[self.id], axis_addr[x][0], axis_addr[x][1])
-                    # self.CtrlFMC[self.id].disconnect_Machine()
-                else: print("Error connection: {}".format(self.id))
+                
+                self.CtrlFMC[self.id].get_Status() 
+                
+                if x == 0:
+                    if self.CtrlFMC[self.id].Axis_RealPos[0] > 2198:
+                        self.CtrlFMC[self.id].set_Output(0,1)
+                    else: self.CtrlFMC[self.id].set_Output(0,0)
+                       
+                self.FMC_S7(self.CtrlFMC[self.id], axis_addr[x][0], axis_addr[x][1])
+                # self.CtrlFMC[self.id].disconnect_Machine()
+                
                 end_time = time.perf_counter()
                 print(end_time - start_time, self.id, "seconds FMC")
             self.set_plc_data()
