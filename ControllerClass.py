@@ -19,6 +19,7 @@ class FMC4030:
     ip = '192.168.0.30'
     port = 8088
     
+    enable_status = False
     # Axis Comm Status
     Axis_Comm_Status = [0, 0, 0]
     
@@ -29,9 +30,9 @@ class FMC4030:
     Axis_RealSpeed = [0, 0, 0]
     
     # Home Status
-    AxisX_Home = 0
-    AxisY_Home = 0
-    AxisZ_Home = 0
+    AxisX_Home = False
+    AxisY_Home = False
+    AxisZ_Home = False
     
     # Run Status
     AxisX_Run = False
@@ -152,7 +153,7 @@ class FMC4030:
         currentPos = c_float(0.0)
         self.Axis_Comm_Status[int(Axis.value)] = self.fmc4030.FMC4030_Get_Axis_Current_Pos(self.id, Axis, pointer(currentPos))
         self.Axis_RealPos[int(Axis.value)] = int(round(currentPos.value))
-        print("Call Current Pos: {}".format(self.Axis_Comm_Status[int(Axis.value)]))
+        # print("Call Current Pos: {}".format(self.Axis_Comm_Status[int(Axis.value)]))
         time.sleep(0.03)
     
     def get_AxisCurrentSpeed(self, Axis=axisX):
@@ -203,27 +204,18 @@ class FMC4030:
 
     def listening(self):
         
-        self.enable_status = False
-        
-        while True:
-            pass
-                
-            # if not (self.get_AxisIsStop(axisX)): 
-            #     self.get_AxisCurrentPos(axisX)
-            #     self.get_AxisCurrentSpeed(axisX)
-            #     self.enable_status = True
-            # if not self.get_AxisIsStop(axisY): 
-            #     self.get_AxisCurrentPos(axisY)
-            #     self.get_AxisCurrentSpeed(axisY)
-            #     self.enable_status = True
-            # if not self.get_AxisIsStop(axisZ): 
-            #     self.get_AxisCurrentPos(axisZ)
-            #     self.get_AxisCurrentSpeed(axisZ)
-            #     self.enable_status = True
-            
-            # if self.get_AxisIsStop(3) and self.enable_status:
-            #     self.get_Status()
-            #     self.enable_status = False
+        # self.enable_status = False
+        pass
+        # while True:
+
+        #     # self.get_AxisCurrentPos(axisX)    
+        #     if (self.ms.realPos[0] > 1500) and self.AxisX_Home and not self.enable_status : 
+        #         self.set_Output(0,1)
+        #         self.enable_status = True
+        #     elif (self.ms.realPos[0] <= 1500) and self.enable_status: 
+        #         self.set_Output(0,0)
+        #         self.enable_status = False
+          
                 
         
           
