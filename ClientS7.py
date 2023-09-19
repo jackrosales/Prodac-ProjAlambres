@@ -360,9 +360,18 @@ class PLCDataParser(HTTPDataSender):
                 self.CtrlFMC[self.id].get_Status() 
                 
                 if x == 0:
-                    if self.CtrlFMC[self.id].Axis_RealPos[0] > 2198:
+                    if self.CtrlFMC[self.id].Axis_RealPos[0] >= 1500:
                         self.CtrlFMC[self.id].set_Output(0,1)
                     else: self.CtrlFMC[self.id].set_Output(0,0)
+                    
+                    if self.CtrlFMC[self.id].Axis_RealPos[0] >= 2200:
+                        self.CtrlFMC[self.id].set_Output(1,1)
+                    else: self.CtrlFMC[self.id].set_Output(1,0)
+                    
+                    if self.CtrlFMC[self.id].Axis_RealPos[1] >= 1500:
+                            self.CtrlFMC[self.id].set_Output(2,1)
+                    else: self.CtrlFMC[self.id].set_Output(2,0)
+                
                        
                 self.FMC_S7(self.CtrlFMC[self.id], axis_addr[x][0], axis_addr[x][1])
                 # self.CtrlFMC[self.id].disconnect_Machine()

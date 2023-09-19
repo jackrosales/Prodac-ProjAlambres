@@ -1,191 +1,205 @@
 import cv2
-import asyncio
-import keyboard
 import time
+from enum import Enum
 from onvif import ONVIFCamera, ONVIFService, ONVIFError
-
-Min = {}
-Max = {}
-
-# def event_keyboard(k):
-    # pass
-    # global exit_program
-
-    # if k == 27:  # esc
-    #     exit_program = 1
-
-    # elif k == ord('w') or k == ord('W'):
-    #     X.relative_move(0, 0.1, 0)
-
-    # elif k == ord('a') or k == ord('A'):
-    #     X.relative_move(-0.1, 0, 0)
-
-    # elif k == ord('s') or k == ord('S'):
-    #     X.relative_move(0, -0.1, 0)
-
-    # elif k == ord('d') or k == ord('D'):
-    #     X.relative_move(0.1, 0, 0)
-
-    # elif k == ord('h') or k == ord('H'):
-    #     X.go_home_position()
-
-    # elif k == ord('z') or k == ord('Z'):
-    #     X.relative_move(0, 0, 0.05)
-
-    # elif k == ord('x') or k == ord('X'):
-    #     X.relative_move(0, 0, -0.05)
+from ImgProcessing import measure_welding
 
 
-# await mycam.update_xaddrs()
+class CamAI():
+    def __init__(self, cam_ip, user, password) -> None:
+        self.cam_ip = '192.168.90.108'
+        self.cam_port = 80
+        self.user = 'admin'
+        self.pswd = 'Bertek@206036'
+        self.capture = cv2.VideoCapture(f'rtsp://{self.user}:{self.pswd}@{self.cam_ip}')
+        self.mycam = ONVIFCamera(self.cam_ip, self.cam_port, self.user, self.pswd)
+        self.ptz = self.mycam.create_ptz_service()
+        self.media = self.mycam.create_media_service()
+        self.imaging = self.mycam.create_imaging_service()
+        self.cam_token = self.media.GetProfiles()[0].token
+        self.vid_token = self.media.GetVideoSources()[0].token
+        self.presets = None
+        self.current_preset = None
+        self.velocity = 1
 
-# ptz_service = mycam.create_ptz_service()
-# media_service = mycam.create_media_service()
+    def key_control(self, key):
+        if key == ord('w'):
+            self.move_up()
+        elif key == ord('s'):
+            self.move_down()
+        elif key == ord('a'):
+            self.move_left() 
+        elif key == ord('d'):
+            self.move_right()
+        elif key == ord('r'):
+            print('Saved')
+            filename = f'frame_{image_number}.png'
+            cv2.imwrite(filename, img)
+            print(f"Saved {filename}")
+            image_number += 1
+        elif key == ord('f'):
+            print('Autofocus')
+            self.set_autofocus()
+            
+        elif key == ord('g'):
+            self.get_state()
+        elif key == ord('i'):
+            self.zoom_in()
+        elif key == ord('o'):
+            self.zoom_out()
+        elif key == ord('1'):
+            self.goto_preset('Zero')
+            self.current_preset = 'Zero'
+        elif key == ord('2'):
+            self.goto_preset('Init')
+            self.current_preset = 'Init'
+        elif key == ord('3'):
+            self.goto_preset('Support')
+            self.current_preset = 'Support'
+        elif key == ord('4'):
+            self.goto_preset('Machine')
+            self.current_preset = 'Machine'
+        elif key == ord('5'):
+            self.goto_preset('Wire_out')
+            self.current_preset = 'Wire_out'
+        elif key == ord('6'):
+            self.goto_preset('Esmeril')
+            self.current_preset = 'Esmeril'
+    
 
-# mycam.
-# ptzrequest = mycam.get_capabilities('GetConfigurationOptions')
-# # Get target profile
-# media_profile = media_service.GetProfiles()[0]
-# ptzrequest.ConfigurationToken = media_profile.PTZConfiguration.token
-# ptz_configuration_options = mycam.GetConfigurationOptions(ptzrequest)
-# moverequest = mycam.create_type('ContinuousMove')
-# moverequest.ProfileToken = media_profile.token
+    def load_presets(self):
+        self.presets = self.ptz.GetPresets(self.cam_token)
+        if self.presets:
+            print("Available PTZ presets:")
+            for preset in self.presets:
+                print(f"- {preset.Name}")
+        else: 
+            print("No available presets")
 
-# if moverequest.Velocity is None:
-#     moverequest.Velocity = mycam.GetStatus({'ProfileToken': media_profile.token}).Position
-#     moverequest.Velocity.PanTilt.space = ptz_configuration_options.Spaces.ContinuousPanTiltVelocitySpace[0].URI
-#     moverequest.Velocity.Zoom.space = ptz_configuration_options.Spaces.ContinuousZoomVelocitySpace[0].URI
+    def goto_preset(self, name):
+        preset_name = name  # Replace with the name of the preset you want to use
+        found = False
+        for preset in self.presets:
+            if preset.Name == preset_name:
+                print(f"Moving to {preset_name} ...", end=" ")
+                self.ptz.GotoPreset({'ProfileToken': self.cam_token, 'PresetToken': preset.token})
+                print('DONE')
+                found = True
+        if not found:
+            print(f"Preset {preset_name} not found")
 
-# direction = {
-#         'panning': move_panning,
-#         'upleft': move_upleft,
-#         'up': move_up,
-#         'upright': move_upright,
-#         'left': move_left,
-#         'right': move_right,
-#         'downleft': move_downleft,
-#         'down': move_down,
-#         'downright': move_downright,
-#         'wide': zoom_wide,
-#         'tele': zoom_tele,
-#         'in': iris_in,
-#         'out': iris_out,
-#     }
+    def get_state(self):
+        status = self.ptz.GetStatus({'ProfileToken': self.cam_token})
+        vid_status = self.imaging.GetImagingSettings({'VideoSourceToken': self.vid_token})
+        print(vid_status)
+        print(status)
+        return status
+    
+    def save_preset(self):
+        name = input('Ingrese nombre de nuevo preset: ')
+        response = self.ptz.SetPreset({'ProfileToken': self.cam_token, 'PresetName': name})
+        print(response)
 
-# func = direction['down']
-# active = False
+    def set_autofocus(self):
+        img_settings = self.imaging.GetImagingSettings({'VideoSourceToken': self.vid_token})
+        img_settings.Focus.AutoFocusMode = 'AUTO'
+        set_img_request = self.imaging.create_type('SetImagingSettings')
+        set_img_request.VideoSourceToken = self.vid_token
+        set_img_request.ImagingSettings = img_settings
+        self.imaging.SetImagingSettings(set_img_request)
+        print('Auto Focus mode ON')
+    
+    def set_velocity(self, velocity):
+        if 0 <= velocity and velocity <=1:
+            self.velocity = velocity
+        else:
+            print('Velocidad fuera de rango <min:0,max:1>')
+
+    def move_up(self):
+        print('Up')
+        self.ptz.ContinuousMove({'ProfileToken': self.cam_token, 'Velocity': {'PanTilt': {'x': 0, 'y': self.velocity}}})
+        time.sleep(0.1)
+        self.ptz.Stop({'ProfileToken': self.cam_token})
+
+    # Mover la cámara hacia abajo
+    def move_down(self):
+        #ptz = mycam.create_ptz_service()
+        print('Down')
+        self.ptz.ContinuousMove({'ProfileToken': self.cam_token, 'Velocity': {'PanTilt': {'x': 0, 'y': -self.velocity}}})
+        time.sleep(0.1)
+        self.ptz.Stop({'ProfileToken': self.cam_token})
+
+    # Mover la cámara hacia la izquierda
+    def move_left(self):
+        #ptz = mycam.create_ptz_service()
+        print('Left')
+        self.ptz.ContinuousMove({'ProfileToken': self.cam_token, 'Velocity': {'PanTilt': {'x': -self.velocity, 'y': 0}}})
+        time.sleep(0.1)
+        self.ptz.Stop({'ProfileToken': self.cam_token})
+
+    # Mover la cámara hacia la derecha
+    def move_right(self):
+        #ptz = mycam.create_ptz_service()
+        print('Right')
+        self.ptz.ContinuousMove({'ProfileToken': self.cam_token, 'Velocity': {'PanTilt': {'x': self.velocity, 'y': 0}}})
+        time.sleep(0.1)
+        self.ptz.Stop({'ProfileToken': self.cam_token})
+
+    def zoom_in(self):
+        print('Zoom  IN')
+        self.ptz.ContinuousMove({'ProfileToken': self.cam_token, 'Velocity': {'PanTilt': {'x': 0, 'y': 0}, 'Zoom': -1}})
+        time.sleep(0.1)
+        self.ptz.Stop({'ProfileToken': self.cam_token})
+
+    def zoom_out(self):
+        print('Zoom OUT')
+        self.ptz.ContinuousMove({'ProfileToken': self.cam_token, 'Velocity': {'PanTilt': {'x': 0, 'y': 0}, 'Zoom': 1}})
+        time.sleep(0.1)
+        self.ptz.Stop({'ProfileToken': self.cam_token})
 
 
-# def ptz_move(ptz, request, active):
-#     if active:
-#         ptz.ContinuousMove(request)
-#     else:
-#         ptz.Stop({'ProfileToken': request.ProfileToken})
-
-# def move_down(ptz, request, active):
-#     request.Velocity.PanTilt.y = -2
-#     request.Velocity.PanTilt.x = 0
-#     request.Velocity.Zoom.x = 0
-#     ptz_move(ptz, request, active)
-
-
-cap = cv2.VideoCapture('rtsp://admin:Bertek@206036@192.168.90.108')
-
+# cap = cv2.VideoCapture('rtsp://admin:Bertek@206036@192.168.90.108')
 # mycam = ONVIFCamera('192.168.90.108', 80, 'BERTEK', 'Bertek@2060', '/wsdl/')
 
 # Configura la dirección IP, puerto, nombre de usuario y contraseña de la cámara ONVIF
 CAMERA_IP = '192.168.90.108'
 CAMERA_PORT = 80
-USERNAME = 'BERTEK'
-PASSWORD = 'Bertek@2060'
+USERNAME = 'admin'
+PASSWORD = 'Bertek@206036'
 
-# Conectarse a la cámara ONVIF
-def connect_to_camera():
-    mycam = ONVIFCamera(CAMERA_IP, CAMERA_PORT, USERNAME, PASSWORD, 'D:\Documentos\PRODAC - ALAMBRES\Prodac-ProjAlambres-1\wsdl')
-    return mycam
-
-# Mover la cámara según la tecla presionada
-def move_camera(key):
-    if key.name == 'up':
-        move_up()
-    elif key.name == 'down':
-        move_down()
-    elif key.name == 'left':
-        move_left()
-    elif key.name == 'right':
-        move_right()
-
-# Mover la cámara hacia arriba
-def move_up():
-    ptz = get_ptz(mycam)
-    ptz.ContinuousMove({'ProfileToken': cam_token, 'Velocity': {'PanTilt': {'x': 0, 'y': 1}}})
-    time.sleep(0.1)
-    ptz.Stop({'ProfileToken': cam_token})
-
-# Mover la cámara hacia abajo
-def move_down():
-    ptz = mycam.create_ptz_service()
-    ptz.ContinuousMove({'ProfileToken': cam_token, 'Velocity': {'PanTilt': {'x': 0, 'y': -1}}})
-    time.sleep(0.1)
-    ptz.Stop({'ProfileToken': cam_token})
-
-# Mover la cámara hacia la izquierda
-def move_left():
-    ptz = mycam.create_ptz_service()
-    ptz.ContinuousMove({'ProfileToken': cam_token, 'Velocity': {'PanTilt': {'x': -1, 'y': 0}}})
-    time.sleep(0.1)
-    ptz.Stop({'ProfileToken': cam_token})
-
-# Mover la cámara hacia la derecha
-def move_right():
-    ptz = mycam.create_ptz_service()
-    ptz.ContinuousMove({'ProfileToken': cam_token, 'Velocity': {'PanTilt': {'x': 1, 'y': 0}}})
-    time.sleep(0.1)
-    ptz.Stop({'ProfileToken': cam_token})
-
-async def get_media_prof(cam):
-    media = await cam.create_media_service()
-    prof = await media.GetProfiles()
-    cam_token = prof[0]._token
-    return cam_token
-
-async def get_ptz(cam):
-    ptz = await cam.create_ptz_service()
-    return ptz
-
+camera = CamAI(CAMERA_IP, USERNAME, PASSWORD)
+camera.load_presets()
 
 if __name__ == '__main__':
-    mycam = connect_to_camera()
-    # media = get_media_serv(mycam)
-    # profiles = get_media_prof(mycam)
-    cam_token = get_media_prof(mycam)
-    print(cam_token)
+    print(camera.cam_token)
     time.sleep(3)
     print("Usa las teclas de dirección (arriba, abajo, izquierda, derecha) para mover la cámara ONVIF.")
     print("Presiona 'Q' para salir.")
 
+    run = True
+    while run:    
+        try:
+            success, img = camera.capture.read()
+            if camera.current_preset == 'Machine':
+                img_fin, dist, dx1, dx2 = measure_welding(img)
+                cv2.imshow("distance", img_fin)
 
-    while True:    
-        success, img = cap.read()
-        cv2.imshow("Image", img)
+            cv2.imshow("Image", img)
 
-        if (cv2.waitKey(1) & 0xFF) == ord('q'): 
-            break
-        else: keyboard.on_press(move_camera)
-        # keyboard.wait('q')  # Esperar hasta que se presione la tecla 'Q' para salir
+            key = cv2.waitKey(1) & 0xFF
+            if key == ord('q'): 
+                run = False
+                break
+            #else: keyboard.on_press(move_camera)
+            else:
+                camera.key_control(key)
 
-        # key = (cv2.waitKey(1) & 0xFF)
-        # if  key == ord('q'): 
-        #     break
-        # elif key == ord('z') or key == ord('Z'):
-        #     active=True
-        #     func(mycam, moverequest, active)
-        #     time.sleep(0.2  )
-        #     active=False
-        #     func(mycam, moverequest, active)
-        # elif key == ord('s') or key == ord('S'):
-        #     active=False
-        #     func(mycam, moverequest, active)
-        #     time.sleep(0.2)
+        except cv2.error as e:
+            print(f"OpenCV Error: {e}")
+
+        except KeyboardInterrupt:
+            run = False
+
 
     cv2.destroyAllWindows()    
 
