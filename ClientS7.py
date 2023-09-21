@@ -281,26 +281,28 @@ class PLCDataParser(HTTPDataSender):
         if (self.ctw_plc["AbsXY"] ^ self.ctw_plc["AbsXZ"] ^ self.ctw_plc["AbsYZ"]) :
             axe = 3 if self.ctw_plc["AbsXY"] else 5 if self.ctw_plc["AbsXZ"] else 6 if self.ctw_plc["AbsYZ"] else 3
                 
-            self.data_post = {"Id": self.id, "AxeId": axe, "EndX": self.data_struc["2AxisS_XY"]["SP_POSX"], "EndY": self.data_struc["2Axis_XY"]["SP_POSY"], "Speed": self.data_struc["2Axis_XY"]["SP_VEL"], "Acc": self.data_struc["2Axis_XY"]["ACC"], "Dec": self.data_struc["2Axis_XY"]["DEC"]}
-            # self.send_data("2axis_move")
             CtrlFMC.move_2Axis(axe, self.data_struc["2AxisS_XY"]["SP_POSX"], self.data_struc["2Axis_XY"]["SP_POSY"], self.data_struc["2Axis_XY"]["SP_VEL"], self.data_struc["2Axis_XY"]["ACC"], self.data_struc["2Axis_XY"]["DEC"])
+        if self.ctw_plc["StopRun"]:
+            CtrlFMC.stop_run()
             
         # 3Axis Move
         self.comm_axis("3Axis_XYZ")
         if self.ctw_plc["AbsXYZ"] :
-            self.data_post = {"Id": self.id, "EndX": self.data_struc["3Axis_XYZ"]["SP_POSX"], "EndY": self.data_struc["3Axis_XYZ"]["SP_POSY"], "EndZ": self.data_struc["3Axis_XYZ"]["SP_POSZ"], "Speed": self.data_struc["3Axis_XYZ"]["SP_VEL"], "Acc": self.data_struc["3Axis_XYZ"]["ACC"], "Dec": self.data_struc["3Axis_XYZ"]["DEC"]}
-            # self.send_data("3axis_move")
-            CtrlFMC.move_3Axis(self.data_struc["3Axis_XYZ"]["SP_POSX"], self.data_struc["3Axis_XYZ"]["SP_POSY"], self.data_struc["3Axis_XYZ"]["SP_POSZ"], self.data_struc["3Axis_XYZ"]["SP_VEL"], self.data_struc["3Axis_XYZ"]["ACC"], self.data_struc["3Axis_XYZ"]["DEC"])
             
+            CtrlFMC.move_3Axis(self.data_struc["3Axis_XYZ"]["SP_POSX"], self.data_struc["3Axis_XYZ"]["SP_POSY"], self.data_struc["3Axis_XYZ"]["SP_POSZ"], self.data_struc["3Axis_XYZ"]["SP_VEL"], self.data_struc["3Axis_XYZ"]["ACC"], self.data_struc["3Axis_XYZ"]["DEC"])
+        if self.ctw_plc["StopRun"]:
+            CtrlFMC.stop_run()
+                    
         # 2Arc Move
         self.comm_axis("ARC_XY")
         if (self.ctw_plc["ArcXY"] ^ self.ctw_plc["ArcXZ"] ^ self.ctw_plc["ArcYZ"]) :
             axe = 3 if self.ctw_plc["ArcXY"] else 5 if self.ctw_plc["ArcXZ"] else 6 if self.ctw_plc["ArcYZ"] else 3
-            
-            self.data_post = {"Id": self.id, "AxeId": axe, "EndX": self.data_struc["ARC_XY"]["SP_POSX"], "EndY": self.data_struc["ARC_XY"]["SP_POSY"], "CenterX": self.data_struc["ARC_XY"]["CENTERX"], "CenterY": self.data_struc["ARC_XY"]["CENTERY"], "Radius": self.data_struc["ARC_XY"]["RADIUS"], "Speed": self.data_struc["ARC_XY"]["SP_VEL"], "Acc": self.data_struc["ARC_XY"]["ACC"], "Dec": self.data_struc["ARC_XY"]["DEC"], "Dir": self.data_struc["ARC_XY"]["DIR"]}
-            # self.send_data("2arc_move")
+            # print("Move Arc: ", self.id, self.data_struc["ARC_XY"])
             CtrlFMC.move_Arc2Axis(axe, self.data_struc["ARC_XY"]["SP_POSX"], self.data_struc["ARC_XY"]["SP_POSY"], self.data_struc["ARC_XY"]["CENTERX"], self.data_struc["ARC_XY"]["CENTERY"], self.data_struc["ARC_XY"]["RADIUS"], self.data_struc["ARC_XY"]["SP_VEL"], self.data_struc["ARC_XY"]["ACC"], self.data_struc["ARC_XY"]["DEC"], self.data_struc["ARC_XY"]["DIR"])
-            
+        if self.ctw_plc["StopRun"]:
+            # print("Stop Run Command")
+            CtrlFMC.stop_Run() 
+               
     def stw_proc(self, status: int):
         ind = 1
         for x in self.stw_fmc:

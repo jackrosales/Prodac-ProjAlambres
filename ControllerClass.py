@@ -167,6 +167,10 @@ class FMC4030:
         print("Stop: {}".format(self.fmc4030.FMC4030_Stop_Single_Axis(self.id, Axis, Mode)))
         time.sleep(0.03)
     
+    def stop_Run(self):
+        print("Stop Run: {}".format(self.fmc4030.FMC4030_Stop_Run(self.id)))
+        time.sleep(0.03)
+    
     def home_Move(self, Axe=axisX, HomeSpeed=15, HomeAcc=200, HomeFall=15, HomeDir=2):
         # Código para poner a Home Eje
         print ("Home: {}".format(self.fmc4030.FMC4030_Home_Single_Axis(self.id, Axe, c_float(HomeSpeed), c_float(HomeAcc), c_float(HomeFall), HomeDir)))
