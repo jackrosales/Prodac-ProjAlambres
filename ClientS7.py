@@ -90,11 +90,11 @@ class PLCDataParser(HTTPDataSender):
             },
         "ARC_XY":{
             "CTW":      0,
-            "SP_POSX":   0,
-            "SP_POSY":   0,
-            "CENTERX":   0,
-            "CENTERY":  0,
-            "RADIUS":  0,
+            "SP_POSX":   0.0,
+            "SP_POSY":   0.0,
+            "CENTERX":   0.0,
+            "CENTERY":  0.0,
+            "RADIUS":  0.0,
             "SP_VEL":  0,
             "ACC":      0,
             "DEC":      0,
@@ -196,8 +196,13 @@ class PLCDataParser(HTTPDataSender):
         # ARC XY - Data Values    
         ind = offset + 82
         for parARC in self.data_struc["ARC_XY"]:
-            self.data_struc["ARC_XY"][parARC] = util.get_int(self.data_control, ind)
-            ind+=2
+            
+            if parARC == "SP_POSX" or parARC == "SP_POSY" or parARC == "CENTERX" or parARC == "CENTERY" or parARC == "RADIUS": 
+                self.data_struc["ARC_XY"][parARC] = util.get_real(self.data_control, ind)
+                ind+=4
+            else: 
+                self.data_struc["ARC_XY"][parARC] = util.get_int(self.data_control, ind)
+                ind+=2
         
     
     def set_fmc_values(self, offset):
@@ -283,7 +288,7 @@ class PLCDataParser(HTTPDataSender):
                 
             CtrlFMC.move_2Axis(axe, self.data_struc["2AxisS_XY"]["SP_POSX"], self.data_struc["2Axis_XY"]["SP_POSY"], self.data_struc["2Axis_XY"]["SP_VEL"], self.data_struc["2Axis_XY"]["ACC"], self.data_struc["2Axis_XY"]["DEC"])
         if self.ctw_plc["StopRun"]:
-            CtrlFMC.stop_run()
+            CtrlFMC.stop_Run(self.id)
             
         # 3Axis Move
         self.comm_axis("3Axis_XYZ")
@@ -291,7 +296,7 @@ class PLCDataParser(HTTPDataSender):
             
             CtrlFMC.move_3Axis(self.data_struc["3Axis_XYZ"]["SP_POSX"], self.data_struc["3Axis_XYZ"]["SP_POSY"], self.data_struc["3Axis_XYZ"]["SP_POSZ"], self.data_struc["3Axis_XYZ"]["SP_VEL"], self.data_struc["3Axis_XYZ"]["ACC"], self.data_struc["3Axis_XYZ"]["DEC"])
         if self.ctw_plc["StopRun"]:
-            CtrlFMC.stop_run()
+            CtrlFMC.stop_Run(self.id)
                     
         # 2Arc Move
         self.comm_axis("ARC_XY")
@@ -301,7 +306,7 @@ class PLCDataParser(HTTPDataSender):
             CtrlFMC.move_Arc2Axis(axe, self.data_struc["ARC_XY"]["SP_POSX"], self.data_struc["ARC_XY"]["SP_POSY"], self.data_struc["ARC_XY"]["CENTERX"], self.data_struc["ARC_XY"]["CENTERY"], self.data_struc["ARC_XY"]["RADIUS"], self.data_struc["ARC_XY"]["SP_VEL"], self.data_struc["ARC_XY"]["ACC"], self.data_struc["ARC_XY"]["DEC"], self.data_struc["ARC_XY"]["DIR"])
         if self.ctw_plc["StopRun"]:
             # print("Stop Run Command")
-            CtrlFMC.stop_Run() 
+            CtrlFMC.stop_Run(self.id) 
                
     def stw_proc(self, status: int):
         ind = 1
@@ -350,7 +355,7 @@ class PLCDataParser(HTTPDataSender):
         
         while(True):
             
-            axis_addr =[[0, 0], [26, 102], [52, 204], [78, 306]]
+            axis_addr =[[0, 0], [26, 112], [52, 224], [78, 336]]
             
             start_time_total = time.perf_counter()
             self.get_plc_data()
@@ -374,10 +379,10 @@ class PLCDataParser(HTTPDataSender):
                             self.CtrlFMC[self.id].set_Output(2,1)
                     else: self.CtrlFMC[self.id].set_Output(2,0)
                 
-                       
+                     
                 self.FMC_S7(self.CtrlFMC[self.id], axis_addr[x][0], axis_addr[x][1])
                 # self.CtrlFMC[self.id].disconnect_Machine()
-                
+    
                 end_time = time.perf_counter()
                 print(end_time - start_time, self.id, "seconds FMC")
             self.set_plc_data()

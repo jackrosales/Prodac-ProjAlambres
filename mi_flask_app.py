@@ -301,9 +301,8 @@ def seq_wirefeed():
     return jsonify({"funcion": "Step"+str(StepId), "estado": step_status})
 
 if __name__ == "__main__":
-    CtrlParseS701 = PLCDataParser(1,'192.168.90.10', 71, 104, 0, 70, 408, 0, ctrlEjes)
-    # CtrlParseS702 = PLCDataParser(2,'192.168.90.10', 43,144,144,ctrlEjes[1])
-    # CtrlParseS703 = PLCDataParser(3,'192.168.90.10', 43,288,144)
-    # CtrlParseS704 = PLCDataParser(4,'192.168.90.10', 43,432,144)
+    
+    CtrlParseS701 = PLCDataParser(1,'192.168.90.10', 71, 104, 0, 70, 448, 0, ctrlEjes)
+    
     app.run(host='0.0.0.0')
     

@@ -10,7 +10,7 @@ import time
 class FMC4030:
 
     # Ruta de driver para controlador FMC4030
-    so_file = "/home/ubuntu/fmc4030-rasperry-demo/libFMC4030-Lib.so"
+    so_file = "/home/ubuntu/maqui/fmc4030-Drive/libFMC4030-Lib.so"
     fmc4030 = CDLL(so_file)    
     ms = machine_status() # Instancia de estado
     
@@ -167,8 +167,8 @@ class FMC4030:
         print("Stop: {}".format(self.fmc4030.FMC4030_Stop_Single_Axis(self.id, Axis, Mode)))
         time.sleep(0.03)
     
-    def stop_Run(self):
-        print("Stop Run: {}".format(self.fmc4030.FMC4030_Stop_Run(self.id)))
+    def stop_Run(self, id):
+        print("Stop Run: {}".format(self.fmc4030.FMC4030_Stop_Run(id)))
         time.sleep(0.03)
     
     def home_Move(self, Axe=axisX, HomeSpeed=15, HomeAcc=200, HomeFall=15, HomeDir=2):
@@ -201,7 +201,7 @@ class FMC4030:
         print ("3Axis: {}".format(self.fmc4030.FMC4030_Line_3Axis(self.id, 0, c_float(EndX), c_float(EndY), c_float(EndZ), c_float(Speed), c_float(Acc), c_float(Dec))))
         time.sleep(0.03)
     
-    def move_Arc2Axis(self, Axis, EndX, EndY, CenterX, CenterY, Radius, Speed=10, Acc=200, Dec=200, Dir=1):
+    def move_Arc2Axis(self, Axis, EndX, EndY, CenterX, CenterY, Radius, Speed=10, Acc=10, Dec=10, Dir=1):
         # Código para mover 2 Ejes Sincronizados
         print ("Arc2Axis: {}".format(self.fmc4030.FMC4030_Arc_2Axis(self.id, Axis, c_float(EndX), c_float(EndY), c_float(CenterX), c_float(CenterY), c_float(Radius), c_float(Speed), c_float(Acc), c_float(Dec), Dir)))
         time.sleep(0.03)
